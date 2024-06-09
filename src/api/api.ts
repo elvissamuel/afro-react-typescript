@@ -374,6 +374,36 @@ export const getAllItems01 = async (data?:string) => {
   }
 }
 
+export const getAllLocation = async (data?:string) => {
+  const headers = {
+    'auth_param': process.env.REACT_APP_AFROMARKETS_Auth_Params,
+    'Content-Type': 'text/plain'
+  };
+
+try {
+  const response = await apiPost(process.env.REACT_APP_AFROMARKETS_URL + "/address/fetchPickUpAddress", data, headers)
+  return response
+
+}catch (error: any) {
+  return error.response;
+}
+}
+
+export const updateCartProperties = async (data?:string) => {
+  const headers = {
+    'auth_param': process.env.REACT_APP_AFROMARKETS_Auth_Params,
+    'Content-Type': 'text/plain'
+  };
+
+try {
+  const response = await apiPost(process.env.REACT_APP_AFROMARKETS_URL + "/cart/addPropertiesToCart", data, headers)
+  return response
+
+}catch (error: any) {
+  return error.response;
+}
+}
+
 export const getSingleItems = async (data:string) => {
   const headers = {
     'auth_param': process.env.REACT_APP_AFROMARKETS_Auth_Params,

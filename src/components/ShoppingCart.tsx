@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Dispatch, Fragment, SetStateAction, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -7,13 +7,17 @@ import { Toaster, toast } from 'sonner'
 import { encryptData } from '../AES/AES'
 import { OrderProps } from '../models/models'
 import { useUserIp, useUserStore } from 'src/store/user-store'
+import OrderSummary from './OrderSummary'
 
 type Props = {
   order: OrderProps[]
+  setOpenSummary: Dispatch<SetStateAction<boolean>>;
+  setOpenCart: Dispatch<SetStateAction<boolean>>;
 }
 
 const ShoppingCart = (props: Props) => {
   const [open, setOpen] = useState(true)
+  const [openSummary, setOpenSummary] = useState(false)
   const [loading, setLoading] = useState(false)
   const client = useQueryClient()
   const {user} = useUserStore.getState()
@@ -67,6 +71,8 @@ const ShoppingCart = (props: Props) => {
         >
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
         </Transition.Child>
+
+        {/* <OrderSummary order={props.order} open={openSummary} setOpen={setOpenSummary} openModal={setOpen} /> */}
 
         <div className="fixed inset-0 overflow-hidden">
         <Toaster richColors position='top-right' />
@@ -150,15 +156,15 @@ const ShoppingCart = (props: Props) => {
                         <p>Subtotal</p>
                         <p>₤{sum}</p>
                       </div>
-                      <div className="mt-6">
+                      {props.order.length >= 1 && <div className="mt-6">
                         <button
-                        onClick={()=>handleCartCheckout()}
+                        onClick={()=>{props.setOpenSummary(true); props.setOpenCart(false)}}
                         disabled={loading}
                           className="flex items-center justify-center rounded-md border border-transparent bg-primaryColor px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
                         >
                           { loading ? "Loading..." : "Checkout"}
                         </button>
-                      </div>
+                      </div>}
                     </div>}
                   </div>
                 </Dialog.Panel>
