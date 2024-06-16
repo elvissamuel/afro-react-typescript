@@ -26,7 +26,6 @@ const CreateProduct = (props: Props) => {
         e.preventDefault()
         const fee_bearer = user?.isBusiness ? 'business' : 'customer'
         const data = {product_name: productName, product_description: productDescription, product_category: category, product_fee_bearer: fee_bearer, product_image: imgUrl, product_price: productPrice, product_quantity: productQuantity, authorization: user?.authorization}
-        console.log("craete: ", data)
         const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
         createNewProduct({encryptedInfo, setLoading, toast})
 

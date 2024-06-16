@@ -6,7 +6,7 @@ import { decryptAES, encryptData } from '../AES/AES'
 import {TailSpin} from 'react-loader-spinner';
 import Product from '../components/Product'
 import { Toaster } from 'sonner'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { productProps } from '../models/models'
 import DashboardComponent from '../components/DashboardComponent'
 import { useUserIp, useUserProducts, useUserStore } from 'src/store/user-store'
@@ -19,56 +19,18 @@ type DataSentProp = {
 
 const Dashboard = () => {
   const [searchValue, setSearchValue] = useState('')
+  const [searchString, setSearchString] = useState('')
+  const [allProducts, setAllProducts] = useState<productProps[]>()
+  const [filteredProducts, setFilteredroducts] = useState<productProps[]>()
   const {ipAddress} = useUserIp.getState();
   const {user} = useUserStore.getState()
   const {setProduct, product} = useUserProducts.getState()
+  const clientQuery = useQueryClient()
 
-  // const fetchData = async () => {
-  //   try {
-  //     let data: DataSentProp = { authorization: user?.authorization!, ip_address: ipAddress! };
-  //     if (searchValue !== '') {
-  //       data.search_word = searchValue;
-  //     }
+  useEffect(()=> {
+    clientQuery.invalidateQueries({queryKey: ['All_Afro_Orders']})
+  }, [clientQuery])
   
-  //     const encryptedData = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY});
-  //     if(user?.isBusiness){
-  //       const response = await getAllBuisnessProducts01(encryptedData)
-  //       if(response.data){
-  //         if(response.status === 200){
-  //           const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
-  //           const finalData = JSON.parse(decryptedData!)
-  //           return finalData
-  //         }else if(response.status === 500){
-  //           const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
-  //           const finalData = JSON.parse(decryptedData!)
-  //           console.error("Fetch product err: ", finalData.messgae)
-  //         }
-  //       }else{
-  //         console.error("Fetch all product failed")
-  //       }
-  //     }else{
-  //       const response = await getAllItems01(encryptedData)
-
-  //       if(response.data){
-  //         if(response.status === 200){
-  //           const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
-  //           const finalData = JSON.parse(decryptedData!)
-  //           return finalData
-  //         }else if(response.status === 500){
-  //           const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
-  //           const finalData = JSON.parse(decryptedData!)
-  //           console.error("Fetch product err: ", finalData.messgae)
-  //         }
-  //       }else{
-  //         console.error("Fetch all product failed")
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error('Error in fetchData:', error);
-  //     throw error; 
-  //   }
-  // };
-
   const {isLoading, refetch} = useQuery({
     queryKey: ['All_Afro_Products'],
     queryFn: async () => {
@@ -86,6 +48,7 @@ const Dashboard = () => {
               const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
               const finalData = JSON.parse(decryptedData!)
               setProduct(finalData.responseBody)
+              setAllProducts(finalData.responseBody)
               return finalData.responseBody
             }else if(response.status === 500){
               const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
@@ -95,7 +58,9 @@ const Dashboard = () => {
           }else{
             console.error("Fetch all product failed")
           }
-        }else{
+        }
+        
+        if(!user?.isBusiness){
           const response = await getAllItems01(encryptedData)
   
           if(response.data){
@@ -103,6 +68,7 @@ const Dashboard = () => {
               const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
               const finalData = JSON.parse(decryptedData!)
               setProduct(finalData.responseBody)
+              setAllProducts(finalData.responseBody)
               return finalData.responseBody
             }else if(response.status === 500){
               const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
@@ -127,7 +93,12 @@ const Dashboard = () => {
     
   }, [searchValue, refetch]);
 
-  if(isLoading && !product){
+  useEffect(() => {
+    const filteredProducts: productProps[] = (product ?? []).filter((prod: productProps) => prod.name.toLowerCase().includes(searchString.toLowerCase()))
+      setFilteredroducts(filteredProducts)
+  }, [searchString, setFilteredroducts, product ])
+
+  if(isLoading || !allProducts){
     return <div className='flex justify-center items-center mt-20'>
         <TailSpin 
           color="#01974B"
@@ -140,13 +111,22 @@ const Dashboard = () => {
   else return (
     <div className='font-lato'>
       <Toaster richColors position='top-right' closeButton />
-      <DashBoardNav setSearchValue={setSearchValue} />
+      <DashBoardNav setSearchValue={setSearchValue} setSearchString={setSearchString}/>
 
       {!user?.isBusiness ?
       <div>
       <DashboardBanner />
         <div className='grid gap-1 md:grid-cols-2 lg:grid-cols-4 w-[90%] mx-auto '>
-          {product?.map((product: productProps, index: number)=>(
+          
+          {
+          filteredProducts !== undefined && filteredProducts.length !== 0 ?
+           filteredProducts?.map((product: productProps, index: number)=>(
+            <div key={index} className='cursor-pointer my-6 flex items-center justify-center'>
+              <Product product={product} />
+            </div>
+          ))
+          : 
+          allProducts.map((product: productProps, index: number)=>(
             <div key={index} className='cursor-pointer my-6 flex items-center justify-center'>
               <Product product={product} />
             </div>

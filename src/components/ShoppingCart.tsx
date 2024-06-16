@@ -8,6 +8,7 @@ import { encryptData } from '../AES/AES'
 import { OrderProps } from '../models/models'
 import { useUserIp, useUserStore } from 'src/store/user-store'
 import OrderSummary from './OrderSummary'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 type Props = {
   order: OrderProps[]
@@ -22,6 +23,8 @@ const ShoppingCart = (props: Props) => {
   const client = useQueryClient()
   const {user} = useUserStore.getState()
   const {ipAddress} = useUserIp.getState()
+  const navigate =  useNavigate()
+  const location = useLocation();
 
 
   const handleDeleteItem = async (id: number): Promise<any> => {
@@ -55,6 +58,20 @@ const ShoppingCart = (props: Props) => {
       .reduce((acc: number, value: number) => acc + value, 0);
   
     sum = parseFloat(sum.toFixed(1)); // Round sum to one decimal place
+  }
+
+  const handleSubmit = ()=>{
+    props.setOpenCart(false)
+
+    if(location.pathname.includes("dashboard")){
+      props.setOpenSummary(true);  
+    }else{
+      toast("You have to signup/login before you checkout")
+      setTimeout(() => {
+      navigate("/login");
+        
+      }, 2000);
+    }
   }
 
   return (
@@ -158,7 +175,7 @@ const ShoppingCart = (props: Props) => {
                       </div>
                       {props.order.length >= 1 && <div className="mt-6">
                         <button
-                        onClick={()=>{props.setOpenSummary(true); props.setOpenCart(false)}}
+                        onClick={()=>handleSubmit()}
                         disabled={loading}
                           className="flex items-center justify-center rounded-md border border-transparent bg-primaryColor px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
                         >

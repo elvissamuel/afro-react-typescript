@@ -8,8 +8,13 @@ import { Popover,  } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import logo from "../assets/imgs/afrologo.png";
 import { Toaster } from 'sonner'
-import { getCategories } from '../api/api'
+import { getAllOrders, getCategories } from '../api/api'
 import { CategoryProps } from './DashboardNav'
+import ShoppingCart from './ShoppingCart'
+import OrderSummary from './OrderSummary'
+import { useQuery } from '@tanstack/react-query'
+import { encryptData } from 'src/AES/AES'
+import { useUserIp, useUserStore } from 'src/store/user-store'
 
 type Props = {
   setSearchValue?: React.Dispatch<React.SetStateAction<string>>
@@ -20,6 +25,23 @@ const HomeNav = (props: Props) => {
   const [logout, setLogout] = useState(false)
   const [categories, setCategories] = useState<CategoryProps[]>([])
   const [dataIP, setDataIP] = useState()
+  const [openCart, setOpenCart] = useState(false)
+  const [openSummary, setOpenSummary] = useState(false)
+  const {user} = useUserStore.getState()
+  const {ipAddress} = useUserIp.getState()
+
+  const {data: allOrder, } = useQuery({
+    queryKey: ['All_Afro_Orders'],
+    queryFn: async ()=>{
+
+      const data = {ip_address: ipAddress}
+      console.log("sent cart data: ", data)
+      const encryptedData = encryptData({data, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
+      const response = await getAllOrders(encryptedData)
+      return response
+    },
+    // enabled: user?.cartResponse.cartReference !== undefined
+  })
 
   useEffect(() => {
     fetch("https://api64.ipify.org?format=json")
@@ -96,18 +118,16 @@ const HomeNav = (props: Props) => {
                         </Popover.Panel>
                       </Transition>
                     </Popover>
-                    <a
-                      href="#"
+                    <p
                       className="rounded-md px-3 py-2 text-sm font-bold text-primaryColor hover:bg-secondaryColorVar hover:text-primaryColorVar"
                     >
                       What is New
-                    </a>
-                    <a
-                      href="#"
+                    </p>
+                    <p
                       className="rounded-md px-3 py-2 text-sm font-bold text-primaryColor hover:bg-secondaryColorVar hover:text-primaryColorVar"
                     >
                       Orders
-                    </a>
+                    </p>
                     
                   </div>
                 </div>
@@ -142,6 +162,28 @@ const HomeNav = (props: Props) => {
                     <Bars3Icon className="block bg-primaryColor h-6 w-6" aria-hidden="true" />
                   )}
                 </Disclosure.Button>
+              </div>
+              <div>
+              <button
+                    onClick={()=>setOpenCart(prev => !prev)}
+                    type="button"
+                    className="z-40 relative flex-shrink-0 rounded-full p-1 text-primaryColor font-semibold hover:text-gray-700"
+                  >
+                    <span className="absolute -inset-1.5" />
+                    <span className="sr-only">View cart</span>
+                    {/* <BellIcon className="h-6 w-6" aria-hidden="true" /> */}
+                    {!user?.isBusiness ? 
+                    <div className='flex items-center gap-1 flex-row-reverse'> 
+                        {allOrder !== undefined && <div className='text-[11px] font-semibold absolute -left-2 -top-2 bg-primaryColor text-secondaryColor h-5 w-5 text-center rounded-[50%] flex justify-center items-center'>{allOrder?.orders === undefined ? 0 : allOrder?.orders.length}</div>}
+                        <span className='text-sm font-semibold'>Cart</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-6 h-6 font-semibold">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                        </svg>
+                    </div> : null}
+                    {openCart && <ShoppingCart order={allOrder !== undefined ? allOrder.orders : []} setOpenSummary={setOpenSummary} setOpenCart={setOpenCart} />}
+                    {openSummary && <OrderSummary order={allOrder !== undefined ? allOrder.orders : []} setOpenSummary={setOpenSummary} /> }
+
+                  </button>
               </div>
               <div className="hidden lg:ml-4 lg:block">
                 <div className="flex items-center gap-2">

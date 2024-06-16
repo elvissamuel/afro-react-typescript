@@ -12,11 +12,13 @@ import { encryptData } from '../AES/AES'
 import { getAllOrders, getCategories } from '../api/api'
 import { useQuery } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useUserIp, useUserStore } from 'src/store/user-store'
+import { useUserIp, useUserProducts, useUserStore } from 'src/store/user-store'
 import OrderSummary from './OrderSummary'
+import { productProps } from 'src/models/models'
 
 type Props = {
-  setSearchValue?: React.Dispatch<React.SetStateAction<string>>
+  setSearchValue?: React.Dispatch<React.SetStateAction<string>>;
+  setSearchString?: React.Dispatch<React.SetStateAction<string>>;
 }
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
@@ -33,9 +35,11 @@ const DashboardNav = (props: Props) => {
   const [logout, setLogout] = useState(false)
   const [openCart, setOpenCart] = useState(false)
   const [openSummary, setOpenSummary] = useState(false)
+  const [searchString, setSearchString] = useState("")
   const [categories, setCategories] = useState<CategoryProps[]>([]);
   const {user} = useUserStore.getState()
   const {ipAddress} = useUserIp.getState()
+  // const {product, setProduct} = useUserProducts.getState()
    
   
     const {data: allOrder, } = useQuery({
@@ -43,7 +47,7 @@ const DashboardNav = (props: Props) => {
       queryFn: async ()=>{
 
         const data = {authorization: user?.authorization, ip_address: ipAddress, cart_reference: user?.cartResponse.cartReference}
-        console.log("sent cart data: ", data)
+        // console.log("sent cart data: ", data)
         const encryptedData = encryptData({data, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
         const response = await getAllOrders(encryptedData)
         return response
@@ -113,8 +117,7 @@ const DashboardNav = (props: Props) => {
                             <div className="grid grid-cols-1 gap-x-2 gap-y-1 p-4 lg:grid-cols-2">
                               {categories && categories.map((item) => (
                                 <div key={item.name} onClick={()=>{if(props.setSearchValue !== undefined) props.setSearchValue(item.name)}} className="group relative cursor-pointer flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
-                                  {/* <div className="mt-1 flex h-11 w-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
-                                  </div> */}
+
                                   <div className="font-semibold text-gray-900">
                                       {item.name}
                                       <span className="absolute inset-0" />
@@ -157,6 +160,7 @@ const DashboardNav = (props: Props) => {
                       className="block w-full rounded-md border-0 bg-secondaryColor py-1.5 pl-10 pr-3 text-primaryColor placeholder:text-primaryColor focus:bg-secondaryColor focus:text-primaryColor focus:ring-0 sm:text-sm sm:leading-6"
                       placeholder="Search Product"
                       type="search"
+                      onChange={(e)=> {if(props.setSearchString !== undefined){props.setSearchString(e.target.value)}; console.log("input triggered")}}
                     />
                   </div>
                 </div>
@@ -183,13 +187,14 @@ const DashboardNav = (props: Props) => {
                     <span className="absolute -inset-1.5" />
                     <span className="sr-only">View cart</span>
                     {/* <BellIcon className="h-6 w-6" aria-hidden="true" /> */}
-                    {!user?.isBusiness ? <p className='flex items-center gap-1 flex-row-reverse'> 
+                    {!user?.isBusiness ? 
+                    <div className='flex items-center gap-1 flex-row-reverse'> 
                         {allOrder !== undefined && <div className='text-[11px] font-semibold absolute -left-2 -top-2 bg-primaryColor text-secondaryColor h-5 w-5 text-center rounded-[50%] flex justify-center items-center'>{allOrder?.orders === undefined ? 0 : allOrder?.orders.length}</div>}
                         <span className='text-sm font-semibold'>Cart</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-6 h-6 font-semibold">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
                         </svg>
-                    </p> : null}
+                    </div> : null}
                     {openCart && <ShoppingCart order={allOrder !== undefined ? allOrder.orders : []} setOpenSummary={setOpenSummary} setOpenCart={setOpenCart} />}
                     {openSummary && <OrderSummary order={allOrder !== undefined ? allOrder.orders : []} setOpenSummary={setOpenSummary} /> }
 

@@ -1,26 +1,30 @@
 import logo from '../assets/imgs/afrologo.png'
 import { useContext, useState } from 'react';
 import { useForm, SubmitHandler } from "react-hook-form"
-import { handleLogin } from '../api/api';
+import { handleLogin, updateUserCart } from '../api/api';
 import { decryptAES, encryptData } from '../AES/AES';
 import { LoginContext } from '../contexts/LoginContext';
 import { Toaster, toast } from 'sonner'
 import { LoginFormValues } from '../models/models';
 import { useNavigate } from 'react-router-dom';
-import { useUserStore } from 'src/store/user-store';
+import { useUserIp, useUserStore } from 'src/store/user-store';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Login() {
   const [loading, setLoading] = useState(false)
   const {register, handleSubmit, formState: {errors}, reset} = useForm<LoginFormValues>()
   const navigate = useNavigate();
+  const {ipAddress} = useUserIp.getState();
+  const {updateCartResponse} = useUserStore.getState()
   const contextValues = useContext(LoginContext)
+  const clientQuery = useQueryClient()
   if(!contextValues){
     return null;
   }
 
   const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
-    const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY })
     setLoading(true)
+    const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY })
     const response: any = await handleLogin(encryptedInfo);
 
     if (response.data) {
@@ -28,7 +32,7 @@ export default function Login() {
       if(response.status === 200){
       const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY);
       const userData = JSON.parse(decryptedData ?? "");
-
+      console.log("All user info: ", userData)
       const { responseBody } = userData;
       const { cartResponse, authorization, isBusiness, kycVerified, email, fullName } = responseBody;
 
@@ -40,6 +44,22 @@ export default function Login() {
         email,
         fullName
       });
+
+      if(userData.responseBody.cartResponse.cartReference === undefined){
+        const data = {ip_address: ipAddress, authorization: userData.responseBody.authorization }
+        const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
+        const newCart = await updateUserCart(encryptedInfo)
+        if(newCart.status === 200){
+
+          const response = await decryptAES(newCart.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+          const myData = JSON.parse(response!)
+          updateCartResponse({cartReference: myData.responseBody.cartReference, deliveryCost: myData.responseBody.deliveryCost, orders: myData.responseBody.orders })
+          clientQuery.invalidateQueries({queryKey: ['All_Afro_Orders']})
+
+          console.log("depresponse: ", response)
+        }
+        console.log("update cart res: ", newCart)
+        }
 
       toast.success('Login was successful');
       reset();

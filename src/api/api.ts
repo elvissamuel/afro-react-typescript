@@ -770,7 +770,7 @@ export const deleteProduct = async (id: string) => {
 export const getCategories = (setCategories: React.Dispatch<React.SetStateAction<CategoryProps[]>>) => {
   axios.get(process.env.REACT_APP_AFROMARKETS_URL + "/app/categories")
             .then((res) => {
-              console.log('cat log:', res)
+              // console.log('cat log:', res)
               if(res.data){
                 const myData = decryptAES(res.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY).then((myres) => {
                   const response = JSON.parse(myres!)
@@ -840,6 +840,20 @@ export const addReview = async (input: FAddReviewProps)=>{
   }
 
 }
+
+export const updateUserCart = async (encryptedInfo: string) => {
+  const headers = {
+    'auth_param': process.env.REACT_APP_AFROMARKETS_Auth_Params, 
+    'Content-Type': 'text/plain'
+  };
+
+  try{
+    const response = await apiPost(process.env.REACT_APP_AFROMARKETS_URL + "/cart/assignCartToUser", encryptedInfo, headers);
+    return response;
+  }catch(error: any){
+    return error.response;
+  }
+};
 
 
 

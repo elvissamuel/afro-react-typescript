@@ -137,7 +137,7 @@ export default function OrderSummary(props: Props) {
                     <div className='border m-1 shadow-md rounded-md p-3'>
                       <h2 className='mb-4 pb-2 text-primaryColor font-semibold text-lg'>Order Summary</h2>
                       {props.order !== undefined && props.order.length !== 0 ?
-                        <div>
+                        <div className='h-80 overflow-y-scroll'>
                           {props.order.map((ord: OrderProps, index) => (
                             <div key={index} className='border shadow-md m-2 my-4 p-2 flex justify-between'>
                             <div className='flex gap-2'>
