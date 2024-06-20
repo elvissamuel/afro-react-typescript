@@ -26,6 +26,7 @@ function App() {
       .then((data) => {
         const myIPAddress = data.ip;
         setIpAddress(myIPAddress);
+        console.log("my ip: ", myIPAddress)
       })
       .catch((error) => {
         console.error("Error fetching IP:", error);

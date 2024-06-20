@@ -129,6 +129,7 @@ export interface cartReference {
 
 export interface cartResponse {
   cartReference: string;
+  logisticsFee: number;
   deliveryCost: number;
   orders: OrderProps[];
 }

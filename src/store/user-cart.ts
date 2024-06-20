@@ -1,3 +1,4 @@
+import { OrderProps } from 'src/models/models';
 import {create} from 'zustand';
 import { persist, PersistOptions } from 'zustand/middleware';
 
@@ -5,7 +6,7 @@ interface CartState {
   cartReference: string | null;
   cart: any | null;
   numberOfItems: number;
-  orders: any[];
+  orders: OrderProps[];
   setCartReference: (cartReference: string) => void;
   setCart: (cart: any) => void;
   setNumberOfItems: (numberOfItems: number) => void;
@@ -28,7 +29,7 @@ export const useCartStore = create<CartState>(
       setCartReference: (cartReference: string) => set({ cartReference }),
       setCart: (cart: any) => set({ cart }),
       setNumberOfItems: (numberOfItems: number) => set({ numberOfItems }),
-      setOrders: (orders: any[]) => set({ orders }),
+      setOrders: (orders: OrderProps[]) => set({ orders }),
       resetCart: () => set({ cartReference: null, cart: null, numberOfItems: 0, orders: [] }),
     }),
     {

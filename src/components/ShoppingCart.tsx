@@ -2,29 +2,30 @@ import { Dispatch, Fragment, SetStateAction, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { removeFromCart, handleCheckout } from '../api/api'
+import { removeFromCart, handleCheckout01 } from '../api/api'
 import { Toaster, toast } from 'sonner'
-import { encryptData } from '../AES/AES'
+import { decryptAES, encryptData } from '../AES/AES'
 import { OrderProps } from '../models/models'
 import { useUserIp, useUserStore } from 'src/store/user-store'
-import OrderSummary from './OrderSummary'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useCheckoutStore } from 'src/store/user-checkout'
 
 type Props = {
   order: OrderProps[]
   setOpenSummary: Dispatch<SetStateAction<boolean>>;
   setOpenCart: Dispatch<SetStateAction<boolean>>;
+  setStripeUrl: Dispatch<SetStateAction<string | undefined>>;
 }
 
 const ShoppingCart = (props: Props) => {
   const [open, setOpen] = useState(true)
-  const [openSummary, setOpenSummary] = useState(false)
   const [loading, setLoading] = useState(false)
   const client = useQueryClient()
   const {user} = useUserStore.getState()
   const {ipAddress} = useUserIp.getState()
   const navigate =  useNavigate()
   const location = useLocation();
+  const setCheckoutResponse = useCheckoutStore.getState().setCheckoutResponse;
 
 
   const handleDeleteItem = async (id: number): Promise<any> => {
@@ -40,10 +41,6 @@ const ShoppingCart = (props: Props) => {
   
   const encryptedData = encryptData({data: {authorization: user?.authorization, ip_address: ipAddress, cart_reference: user?.cartResponse.cartReference}, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
 
-  const {mutate:handleCartCheckout} = useMutation({
-    mutationFn: ()=> handleCheckout({data:encryptedData, setLoading, toast}),
-  })
-
   const {mutate: deleteCartItem} = useMutation({
     mutationFn: (id:number) => handleDeleteItem(id),
     // @ts-ignore
@@ -57,10 +54,25 @@ const ShoppingCart = (props: Props) => {
       .map((val: OrderProps) => val.price * val.quantity)
       .reduce((acc: number, value: number) => acc + value, 0);
   
-    sum = parseFloat(sum.toFixed(1)); // Round sum to one decimal place
-  }
+    sum = parseFloat(sum.toFixed(1)); 
+    }
 
-  const handleSubmit = ()=>{
+  const handleSubmit = async ()=>{
+    setLoading(true)
+    const response = await handleCheckout01(encryptedData);
+    if(response.status === 200){
+      const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+      const parsedData = JSON.parse(decryptedData!);
+      console.log(" checkout res: ", parsedData.responseBody)
+      setCheckoutResponse(parsedData.responseBody);
+    }
+
+    if(response.status === 500){
+      const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+      const parsedData = JSON.parse(decryptedData!);
+      console.log(" checkout err res: ", parsedData.responseBody)
+    }
+
     props.setOpenCart(false)
 
     if(location.pathname.includes("dashboard")){
@@ -72,6 +84,8 @@ const ShoppingCart = (props: Props) => {
         
       }, 2000);
     }
+    setLoading(false)
+
   }
 
   return (
@@ -88,8 +102,6 @@ const ShoppingCart = (props: Props) => {
         >
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
         </Transition.Child>
-
-        {/* <OrderSummary order={props.order} open={openSummary} setOpen={setOpenSummary} openModal={setOpen} /> */}
 
         <div className="fixed inset-0 overflow-hidden">
         <Toaster richColors position='top-right' />

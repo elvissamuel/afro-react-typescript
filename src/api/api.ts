@@ -665,7 +665,7 @@ export const getAllOrders = async (data:string) => {
     if (response.data) {
       const myData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY);
       const parsedData = JSON.parse(myData!);
-      setOrders(parsedData.responseBody)
+      setOrders(parsedData.responseBody.orders)
       return parsedData.responseBody;
     }
   } catch (error: any) {
@@ -807,7 +807,7 @@ export const handleCheckout = (params: FCheckoutProps) => {
                 duration: 1000
               });
               setTimeout(() => {
-                window.location.href = checkoutUrl;
+                // window.location.href = checkoutUrl;
               }, 1000);
             }
           })
@@ -825,6 +825,17 @@ export const handleCheckout = (params: FCheckoutProps) => {
     .finally(() => {
       params.setLoading(false);
     });
+};
+
+export const handleCheckout01 = async (params: string) => {
+  const headers = {
+    'auth_param': process.env.REACT_APP_AFROMARKETS_Auth_Params, 
+    'Content-Type': 'text/plain'
+  };
+
+  const response = await axios.post(process.env.REACT_APP_AFROMARKETS_URL + "/order/checkout", params, { headers })
+  return response;
+  
 };
 
 export const addReview = async (input: FAddReviewProps)=>{

@@ -33,11 +33,13 @@ const HomeProducts = (props: Props) => {
           if(response.status === 200){
             const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
             const cartResponse = JSON.parse(decryptedData!)
+            console.log("add res: ", cartResponse)
             updateCartResponse(cartResponse.responseBody)
             setCartReference(cartResponse.responseBody.cartReference);
             setNumberOfItems(cartResponse.responseBody.numberOfItems);
             setOrders(cartResponse.responseBody.orders);
             toast.success("Cart was created and item was added successfully");
+            
           }else if(response.status === 500){
             const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
             const data = JSON.parse(decryptedData!)

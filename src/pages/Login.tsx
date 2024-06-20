@@ -53,7 +53,7 @@ export default function Login() {
 
           const response = await decryptAES(newCart.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
           const myData = JSON.parse(response!)
-          updateCartResponse({cartReference: myData.responseBody.cartReference, deliveryCost: myData.responseBody.deliveryCost, orders: myData.responseBody.orders })
+          updateCartResponse({cartReference: myData.responseBody.cartReference, deliveryCost: myData.responseBody.deliveryCost, logisticsFee: myData.responseBody.logisticsFee, orders: myData.responseBody.orders })
           clientQuery.invalidateQueries({queryKey: ['All_Afro_Orders']})
 
           console.log("depresponse: ", response)
