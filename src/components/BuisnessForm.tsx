@@ -32,6 +32,7 @@ const BuisnessForm = () => {
 
       } else if(response.status === 500){
         toast.error(JSON.parse(decryptedData).message)
+        console.log("reg err: ", JSON.parse(decryptedData).message)
       }
     }
     setLoading(false)
