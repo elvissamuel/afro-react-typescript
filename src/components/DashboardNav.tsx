@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useUserIp, useUserStore } from 'src/store/user-store'
 import OrderSummary from './OrderSummary'
+import { useCartStore } from 'src/store/user-cart'
 
 type Props = {
   setSearchValue?: React.Dispatch<React.SetStateAction<string>>;
@@ -36,6 +37,7 @@ const DashboardNav = (props: Props) => {
   const [openSummary, setOpenSummary] = useState(false)
   const [categories, setCategories] = useState<CategoryProps[]>([]);
   const {user} = useUserStore.getState()
+  const {cartReference} = useCartStore.getState()
   const {ipAddress} = useUserIp.getState()
   const [stripeUrl, setStripeUrl] = useState<string>()
    
@@ -44,10 +46,12 @@ const DashboardNav = (props: Props) => {
       queryKey: ['All_Afro_Orders'],
       queryFn: async ()=>{
 
-        const data = {authorization: user?.authorization, ip_address: ipAddress, cart_reference: user?.cartResponse.cartReference}
-        // console.log("sent cart data: ", data)
+        const data = {authorization: user?.authorization, ip_address: ipAddress, cart_reference: cartReference}
+        console.log("sent data from dashboardNav: ", data)
         const encryptedData = encryptData({data, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
         const response = await getAllOrders(encryptedData)
+      console.log("order res from dashboardNav : ", response)
+
         return response
       },
       enabled: user?.cartResponse.cartReference !== undefined

@@ -16,6 +16,16 @@ interface UserEmailState {
   setEmail: (email: string) => void;
 }
 
+interface UserSearchValueState {
+  searchValue: string | null;
+  setSearchValue: (searchValue: string) => void;
+}
+
+interface UserSearchStringState {
+  searchString: string | null;
+  setSearchString: (searchString: string) => void;
+}
+
 interface CountState {
   count: number;
   setCount: (count: number) => void;
@@ -81,6 +91,16 @@ type UserEmailPersist = (
   options: PersistOptions<UserEmailState>
 ) => (set: any, get: any, api: any) => UserEmailState;
 
+type UserSearchValuePersist = (
+  config: (set: any, get: any, api: any) => UserSearchValueState,
+  options: PersistOptions<UserSearchValueState>
+) => (set: any, get: any, api: any) => UserSearchValueState;
+
+type UserSearchStringPersist = (
+  config: (set: any, get: any, api: any) => UserSearchStringState,
+  options: PersistOptions<UserSearchStringState>
+) => (set: any, get: any, api: any) => UserSearchStringState;
+
 type UserIpPersist = (
   config: (set: any, get: any, api: any) => UserIpState,
   options: PersistOptions<UserIpState>
@@ -113,6 +133,30 @@ export const useUserEmail = create<UserEmailState>(
     }),
     {
       name: "Afro-UserEmail",
+    }
+  )
+)
+
+export const useUserSearchValue = create<UserSearchValueState>(
+  (persist as UserSearchValuePersist)(
+    (set) => ({
+      searchValue: null,
+      setSearchValue: (searchValue: string) => set({ searchValue }),
+    }),
+    {
+      name: "Afro-SearchValue",
+    }
+  )
+)
+
+export const useUserSearchString = create<UserSearchStringState>(
+  (persist as UserSearchStringPersist)(
+    (set) => ({
+      searchString: null,
+      setSearchString: (searchString: string) => set({ searchString }),
+    }),
+    {
+      name: "Afro-SearchString",
     }
   )
 )

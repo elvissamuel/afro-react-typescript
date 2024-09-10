@@ -6,6 +6,7 @@ module.exports = {
       barlow: ["Barlow Condensed"],
       bellefair: ["Bellefair"],
       lato: ["Lato"],
+      manrope: ["Manrope"],
       primary: "Orbitron",
       secondary: "Rajdhani",
       tertiary: "Aldrich",

@@ -2,13 +2,14 @@ import { Dispatch, Fragment, SetStateAction, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { removeFromCart, handleCheckout01 } from '../api/api'
+import { removeFromCart, handleCheckout01, removeFromCart001 } from '../api/api'
 import { Toaster, toast } from 'sonner'
 import { decryptAES, encryptData } from '../AES/AES'
 import { OrderProps } from '../models/models'
 import { useUserIp, useUserStore } from 'src/store/user-store'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useCheckoutStore } from 'src/store/user-checkout'
+import { useCartStore } from 'src/store/user-cart'
 
 type Props = {
   order: OrderProps[]
@@ -22,6 +23,7 @@ const ShoppingCart = (props: Props) => {
   const [loading, setLoading] = useState(false)
   const client = useQueryClient()
   const {user} = useUserStore.getState()
+  const {cartReference} = useCartStore.getState()
   const {ipAddress} = useUserIp.getState()
   const navigate =  useNavigate()
   const location = useLocation();
@@ -30,23 +32,39 @@ const ShoppingCart = (props: Props) => {
 
   const handleDeleteItem = async (id: number): Promise<any> => {
     try {
-        const data = {authorization: user?.authorization, cart_reference: user?.cartResponse.cartReference, product_id: id};
+        const data = {authorization: user?.authorization, cart_reference: cartReference, product_id: id};
+        console.log("delete sent data: ", data)
         const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY});
-        return removeFromCart({encryptedInfo, setLoading, toast});
+        const response = await removeFromCart001(encryptedInfo);
+        if(response.status === 200){
+          const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+          const parsedData = JSON.parse(decryptedData!);
+          console.log(" delete res: ", parsedData.responseBody)
+          toast.success("Item removed successfully!")
+          client.invalidateQueries({queryKey: ['All_Afro_Orders']})
+          return parsedData.responseBody
+        }
+    
+        if(response.status === 500){
+          const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+          const parsedData = JSON.parse(decryptedData!);
+          console.log(" delete err res: ", parsedData)
+          return parsedData.responseBody
+        }
     } catch (error) {
         console.error("Error removing item from cart:", error);
         throw error;
     }
 };
   
-  const encryptedData = encryptData({data: {authorization: user?.authorization, ip_address: ipAddress, cart_reference: user?.cartResponse.cartReference}, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
+  const encryptedData = encryptData({data: {authorization: user?.authorization, ip_address: ipAddress, cart_reference: cartReference}, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
 
-  const {mutate: deleteCartItem} = useMutation({
-    mutationFn: (id:number) => handleDeleteItem(id),
-    // @ts-ignore
-    onSuccess: client.invalidateQueries({queryKey: ['All_Afro_Orders']})
+  // const {mutate: deleteCartItem} = useMutation({
+  //   mutationFn: (id:number) => handleDeleteItem(id),
+  //   // @ts-ignore
+  //   onSuccess: client.invalidateQueries({queryKey: ['All_Afro_Orders']})
   
-  })
+  // })
 
   let sum = 0;
   if (props.order !== undefined) {
@@ -58,25 +76,29 @@ const ShoppingCart = (props: Props) => {
     }
 
   const handleSubmit = async ()=>{
-    setLoading(true)
-    const response = await handleCheckout01(encryptedData);
-    if(response.status === 200){
-      const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
-      const parsedData = JSON.parse(decryptedData!);
-      console.log(" checkout res: ", parsedData.responseBody)
-      setCheckoutResponse(parsedData.responseBody);
-    }
+    // setLoading(true)
+    // const response = await handleCheckout01(encryptedData);
+    // if(response.status === 200){
+    //   const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+    //   const parsedData = JSON.parse(decryptedData!);
+    //   console.log(" checkout res: ", parsedData.responseBody)
+    //   setCheckoutResponse(parsedData.responseBody);
+    // }
 
-    if(response.status === 500){
-      const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
-      const parsedData = JSON.parse(decryptedData!);
-      console.log(" checkout err res: ", parsedData.responseBody)
-    }
+    // if(response.status === 500){
+    //   const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+    //   const parsedData = JSON.parse(decryptedData!);
+    //   console.log(" checkout err res: ", parsedData.responseBody)
+    // }
 
-    props.setOpenCart(false)
+    // props.setOpenCart(false)
 
     if(location.pathname.includes("dashboard")){
+      if(sum < 100){
+      toast.error("Purchase total must be at least ₤100")
+      }else{
       props.setOpenSummary(true);  
+      }
     }else{
       toast("You have to signup/login before you checkout")
       setTimeout(() => {
@@ -104,7 +126,7 @@ const ShoppingCart = (props: Props) => {
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-hidden">
-        <Toaster richColors position='top-right' />
+        {/* <Toaster richColors position='top-right' /> */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
               <Transition.Child
@@ -163,7 +185,7 @@ const ShoppingCart = (props: Props) => {
 
                                     <div className="flex">
                                       <button
-                                        onClick={()=>deleteCartItem(order.productId)}
+                                        onClick={()=>handleDeleteItem(order.productId)}
                                         type="button"
                                         className="font-medium text-primaryColor hover:text-primaryColorVar"
                                       >

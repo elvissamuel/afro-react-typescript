@@ -9,6 +9,7 @@ import HomeNav from '../components/HomeNav'
 import HomeProducts from '../components/HomeProducts'
 import { productProps } from 'src/models/models'
 import { useUserIp } from 'src/store/user-store'
+import Pagination from 'src/components/Pagination2';
 
 export type DataSentProp = {
   ip_address: string
@@ -19,9 +20,11 @@ const Home = () => {
   const [searchValue, setSearchValue] = useState('')
   const [searchString, setSearchString] = useState('')
   const {ipAddress} = useUserIp.getState()
-  const [myProducts, setMyProducts] = useState<productProps[]>()
+  const [myProducts, setMyProducts] = useState<productProps[]>([])
   const [filteredProducts, setFilteredroducts] = useState<productProps[]>()
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, seTotalPages] = useState<number>(1)
+  const [pageData, setPagedata] = useState<productProps[]>([])
 
   const {data: allProducts, isLoading, refetch} = useQuery({
     queryKey: ['All_Afro_Products'],
@@ -63,9 +66,26 @@ const Home = () => {
   }, [searchValue, refetch]);
 
   useEffect(() => {
-    const filteredProducts: productProps[] = (myProducts ?? []).filter((prod: productProps) => prod.name.toLowerCase().includes(searchString.toLowerCase()))
-      setFilteredroducts(filteredProducts)
-  }, [searchString, setFilteredroducts, myProducts ])
+    const filteredProducts: productProps[] = (pageData ?? []).filter((prod: productProps) =>
+      prod.name.toLowerCase().includes(searchString.toLowerCase())
+    );
+  
+    setFilteredroducts(filteredProducts);
+  }, [searchString, pageData]);
+  
+  useEffect(() => {
+    const itemsPerPage = 28;
+    const totalPages = Math.ceil(myProducts.length / itemsPerPage);
+    seTotalPages(totalPages);
+  
+    const currentProducts = myProducts.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  
+    setPagedata(currentProducts);
+  }, [myProducts, currentPage]);
+  
 
 
   if(isLoading){
@@ -95,6 +115,7 @@ const Home = () => {
           </div>
         ))}
       </div>
+      <Pagination totalPages={totalPages} currentPage={currentPage} setCurrentPage={setCurrentPage} />
     </div>
   )
 }

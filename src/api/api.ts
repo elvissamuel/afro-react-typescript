@@ -651,6 +651,51 @@ export const removeFromCart = (params: FRemoveFromCartProps) => {
   })
 }
 
+// export const removeFromCart002 = async (encryptedInfo: string) => {
+//   const headers = {
+//     'auth_param':process.env.REACT_APP_AFROMARKETS_Auth_Params, 
+//     'Content-Type': 'text/plain'
+//   }
+//   axios.post(process.env.REACT_APP_AFROMARKETS_URL + "/cart/removeItemFromCart", encryptedInfo, {headers}
+//     )
+//   .then((res) =>{
+//     if(res.data){
+//     const myData = decryptAES(res.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY).then((myres) => {
+//       const response = JSON.parse(myres!)
+//       localStorage.setItem('Afro_Cart_Orders', JSON.stringify(response.responseBody.orders))
+//       localStorage.setItem('Afro_Cart', JSON.stringify(response.responseBody.orders[0]))
+//       localStorage.setItem('Afro_Item_No', JSON.stringify(response.responseBody.numberOfItems))
+//       if(res.status === 200) {
+//         params.toast.success('Product removed successfully', {
+//           duration: 1000
+//         })
+//       }
+//     }).catch((err) => {console.log('real err: ', err)})
+//     console.log('Decrpyted cart res: ', myData)
+//     }
+//   })
+//   .catch((err) => {
+//     console.log('user-form-err: ', err)
+//     params.toast.error("Couldn't remove product from cart")
+//   }).finally(()=>{
+//     params.setLoading(false)
+//   })
+// }
+
+export const removeFromCart001 = async (data: string) => {
+  const headers = {
+    'auth_param':process.env.REACT_APP_AFROMARKETS_Auth_Params, 
+    'Content-Type': 'text/plain'
+  }
+  try{
+    const response = await axios.post(process.env.REACT_APP_AFROMARKETS_URL + "/cart/removeItemFromCart", data, {headers})
+    return response
+  }catch(error: any){
+    return error.response;
+  }
+
+}
+
 
 export const getAllOrders = async (data:string) => {
   const {setOrders} = useUserOrders.getState()

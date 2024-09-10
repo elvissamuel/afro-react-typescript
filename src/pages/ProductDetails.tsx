@@ -1,18 +1,28 @@
-import { useContext } from 'react'
+import { useContext, useState } from 'react'
 import StarComponent from '../components/StarComponent'
 import ButtonComponent from '../components/ButtonComponent'
 import Counter from '../components/Counter'
 import { LoginContext } from '../contexts/LoginContext'
-import { getSingleItems } from '../api/api'
+import { createCart33, getSingleItems } from '../api/api'
 import { Toaster, toast } from 'sonner'
-import { decryptAES } from '../AES/AES'
-import { useQuery } from '@tanstack/react-query';
+import { decryptAES, encryptData } from '../AES/AES'
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import HomeNav from '../components/HomeNav'
 import { TailSpin } from 'react-loader-spinner'
 import BreadCrumbs from '../components/BreadCrumbs'
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
+import { useCountStore, useUserIp, useUserStore } from 'src/store/user-store'
+import { useCartStore } from 'src/store/user-cart'
 
 const ProductDetails = ( ) => {
+  const [loading, setLoading] = useState(false)
+  const location = useLocation();
+  const {ipAddress} = useUserIp.getState();
+  const {user, updateCartResponse} = useUserStore.getState();
+  const { setCartReference, setNumberOfItems, setOrders } = useCartStore.getState()
+  const {setCount} = useCountStore.getState();
+  const count = useCountStore(state => state.count);
+  const queryClient = useQueryClient()
   const contextValues = useContext(LoginContext)
     const { id } = useParams();
 
@@ -32,6 +42,34 @@ const ProductDetails = ( ) => {
       }
       },
     })
+
+    const handleAddToCart = async () => {
+        setLoading(true)
+          const data = {ip_address: ipAddress, product_id: id, quantity: count }
+          console.log('Sent data: ', data)
+          const encryptedInfo = encryptData({data, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
+          const response = await createCart33(encryptedInfo);
+          if(response.data){
+            if(response.status === 200){
+              const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+              const cartResponse = JSON.parse(decryptedData!)
+              console.log("add res: ", cartResponse)
+              updateCartResponse(cartResponse.responseBody)
+              setCartReference(cartResponse.responseBody.cartReference);
+              setNumberOfItems(cartResponse.responseBody.numberOfItems);
+              setOrders(cartResponse.responseBody.orders);
+              setCount(1)
+              toast.success("Cart was created and item was added successfully");
+              queryClient.invalidateQueries({queryKey: ['All_Afro_Orders']})
+  
+            }else if(response.status === 500){
+              const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+              const data = JSON.parse(decryptedData!)
+              console.log("Add product error: ", data.message)
+            }
+          }
+      setLoading(false)
+    }
 
 
     if(!contextValues){
@@ -68,7 +106,7 @@ const ProductDetails = ( ) => {
                 </div>
                 <div className='flex items-center my-2 justify-between gap-2 w-[415px] pr-6'>
 
-                     <button onClick={()=>{toast.warning("Can't Add to Cart", {description: 'You have to sign in before adding to cart'}); setButtonClick(prev => !prev)}} className='w-[251px] bg-secondaryColor font-semibold text-primaryColor rounded-lg h-[40px]'>Add to Cart</button>
+                     <button onClick={()=>{handleAddToCart(); setButtonClick(prev => !prev)}} className='w-[251px] bg-secondaryColor font-semibold text-primaryColor rounded-lg h-[40px]'>Add to Cart</button>
                      
                     <Counter />
                 </div>

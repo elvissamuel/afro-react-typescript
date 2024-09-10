@@ -16,6 +16,13 @@ import ProductDetails from "./pages/ProductDetails";
 import SingleProduct from "./components/SingleProduct";
 import { useUserIp } from "./store/user-store";
 import Legal from "./pages/Legal";
+import NewLandingPage from "./pages/NewLandingPage";
+import SuccessPage from "./components/SuccessPage";
+import FinalLandingPage from "./pages/FiinalLandingPage";
+import FinalHeroSection from "./pages/FinalHeroSection";
+import MarketPlacePage from "./pages/MarketPlacePage";
+import AboutUsPage from "./pages/AboutUsPage";
+import FAQsPage from "./pages/FAQsPage";
 
 function App() {
   const {setIpAddress} = useUserIp.getState()
@@ -39,8 +46,14 @@ function App() {
       <div className="font-lato">
         <ContextProvider>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<FinalLandingPage />} />
+            <Route path="/payment/success" element={<SuccessPage />} />
             <Route path="/home" element={<Home />} />
+            <Route path="/marketplace" element={<MarketPlacePage />} />
+            <Route path="/about-us" element={<AboutUsPage />} />
+            <Route path="/faqs" element={<FAQsPage />} />
+            <Route path="/vendor" element={<FinalLandingPage />} />
+            <Route path="/rider" element={<FinalLandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/kyc" element={<KnowYourClient />} />

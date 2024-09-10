@@ -20,12 +20,12 @@ const HomeProducts = (props: Props) => {
   const {ipAddress} = useUserIp.getState();
   const {user, updateCartResponse} = useUserStore.getState();
   const { setCartReference, setNumberOfItems, setOrders } = useCartStore.getState()
-  const {count} = useCountStore.getState();
+  const {setCount} = useCountStore.getState();
   const queryClient = useQueryClient()
 
   const handleAddToCart = async () => {
       setLoading(true)
-        const data = {ip_address: ipAddress, product_id: props.product.productId, quantity: count }
+        const data = {ip_address: ipAddress, product_id: props.product.productId, quantity: 1 }
         console.log('Sent data: ', data)
         const encryptedInfo = encryptData({data, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
         const response = await createCart33(encryptedInfo);
@@ -38,8 +38,10 @@ const HomeProducts = (props: Props) => {
             setCartReference(cartResponse.responseBody.cartReference);
             setNumberOfItems(cartResponse.responseBody.numberOfItems);
             setOrders(cartResponse.responseBody.orders);
+            setCount(1);
             toast.success("Cart was created and item was added successfully");
-            
+            queryClient.invalidateQueries({queryKey: ['All_Afro_Orders']})
+
           }else if(response.status === 500){
             const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
             const data = JSON.parse(decryptedData!)
@@ -49,12 +51,12 @@ const HomeProducts = (props: Props) => {
     setLoading(false)
   }
         
-        const {mutate: addProduct} = useMutation({
-          mutationFn: handleAddToCart,
-          // @ts-ignore
-          onSuccess: queryClient.invalidateQueries({queryKey: ['All_Afro_Orders']})
+        // const {mutate: addProduct} = useMutation({
+        //   mutationFn: handleAddToCart,
+        //   // @ts-ignore
+        //   onSuccess: queryClient.invalidateQueries({queryKey: ['All_Afro_Orders_home']})
         
-        })
+        // })
 
   if(!location.pathname){
     return null
@@ -73,7 +75,7 @@ const HomeProducts = (props: Props) => {
             <span className='text-xs'>£{props.product.productPrice}</span>
         </div>
         <p className='text-xs'>{props.product.category}</p>
-        <button onClick={()=>addProduct()} className='px-3 shadow-md font-semibold text-primaryColor hover:text-black hover:bg-white py-1 text-sm border w-[107px] bg-secondaryColor rounded-xl'>Add to Cart</button>
+        <button onClick={()=>handleAddToCart()} className='px-3 shadow-md font-semibold text-primaryColor hover:text-black hover:bg-white py-1 text-sm border w-[107px] bg-secondaryColor rounded-xl'>Add to Cart</button>
       </div>
     </div>
 )

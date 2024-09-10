@@ -19,17 +19,19 @@ const Product = (props: Props) => {
   const {ipAddress} = useUserIp.getState();
   const {user, updateCartResponse} = useUserStore.getState();
   const { setCartReference, setNumberOfItems, setOrders } = useCartStore.getState()
-  const {count} = useCountStore.getState();
+  const {setCount} = useCountStore.getState();
+  const {cartReference} = useCartStore.getState()
   const queryClient = useQueryClient()
 
 const handleAddToCart = async () => {
   if(user?.cartResponse){
     setLoading(true)
-    const isEmpty = user.cartResponse.cartReference === undefined;
+    const isEmpty = cartReference === undefined;
     if (isEmpty) {
-      const data = {authorization: user?.authorization, ip_address: ipAddress, product_id: props.product.productId, quantity: count }
+      const data = {authorization: user?.authorization, ip_address: ipAddress, product_id: props.product.productId, quantity: 1 }
       console.log('Sent data: ', data)
       const encryptedInfo = encryptData({data, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
+      console.log("sending data without cartref: ", data)
       const response = await createCart33(encryptedInfo);
       if(response.data){
         if(response.status === 200){
@@ -39,7 +41,11 @@ const handleAddToCart = async () => {
           setCartReference(cartResponse.responseBody.cartReference);
           setNumberOfItems(cartResponse.responseBody.numberOfItems);
           setOrders(cartResponse.responseBody.orders);
+          setCount(1);
           toast.success("Cart was created and item was added successfully");
+          console.log("response from data sent for new cartRef: ", cartResponse)
+
+          queryClient.invalidateQueries({queryKey: ['All_Afro_Orders']})
         }else if(response.status === 500){
           const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
           const data = JSON.parse(decryptedData!)
@@ -47,8 +53,8 @@ const handleAddToCart = async () => {
         }
       }
   } else {
-      const data = {authorization: user.authorization, ip_address: ipAddress, cart_reference: user?.cartResponse.cartReference, product_id: props.product.productId, quantity: count}
-      console.log('Sent data: ', data)
+      const data = {authorization: user.authorization, ip_address: ipAddress, cart_reference: cartReference, product_id: props.product.productId, quantity: 1}
+      console.log('Sent data with cartRef: ', data)
       const encryptedInfo = encryptData({data, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
       const response = await addToCart33(encryptedInfo);
       if(response.data){
@@ -59,7 +65,11 @@ const handleAddToCart = async () => {
           setCartReference(cartResponse.responseBody.cartReference);
           setNumberOfItems(cartResponse.responseBody.numberOfItems);
           setOrders(cartResponse.responseBody.orders);
+          setCount(1);
           toast.success("Item was added to cart successfully");
+          console.log('Response from data sent existing cartRef: ', cartResponse)
+          
+          queryClient.invalidateQueries({queryKey: ['All_Afro_Orders']})
         }else if(response.status === 500){
           const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
           const data = JSON.parse(decryptedData!)
@@ -71,12 +81,12 @@ const handleAddToCart = async () => {
   }
 }
       
-      const {mutate: addProduct} = useMutation({
-        mutationFn: handleAddToCart,
-        // @ts-ignore
-        onSuccess: queryClient.invalidateQueries({queryKey: ['All_Afro_Orders']})
+      // const {mutate: addProduct} = useMutation({
+      //   mutationFn: handleAddToCart,
+      //   // @ts-ignore
+      //   onSuccess: queryClient.invalidateQueries({queryKey: ['All_Afro_Orders']})
       
-      })
+      // })
 
       if(!location.pathname){
         return null
@@ -94,7 +104,7 @@ const handleAddToCart = async () => {
         </div>
         <p className='text-xs'>{props.product.category}</p>
         {!user?.isBusiness ? 
-        <button onClick={()=>addProduct()} className='px-3 shadow-md hover:text-primaryColor py-1 text-sm border w-[107px] hover:bg-secondaryColor rounded-xl'>{loading ? "Loading" : "Add to Cart"}</button> : 
+        <button onClick={()=>handleAddToCart()} className='px-3 shadow-md hover:text-primaryColor py-1 text-sm border w-[107px] hover:bg-secondaryColor rounded-xl'>{loading ? "Loading" : "Add to Cart"}</button> : 
         <div className='flex items-center'>
           <button className='px-3 shadow-md bg-primaryColor text-secondaryColor hover:text-primaryColor py-2 text-sm border w-[107px] hover:bg-secondaryColor'>Edit</button>
           <button className='px-3 shadow-md bg-red-600 text-white hover:text-primaryColor py-2 text-sm border w-[107px] hover:bg-secondaryColor'>Delete</button>

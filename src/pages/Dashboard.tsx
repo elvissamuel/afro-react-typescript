@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { productProps } from '../models/models'
 import DashboardComponent from '../components/DashboardComponent'
 import { useUserIp, useUserProducts, useUserStore } from 'src/store/user-store'
+import Pagination from 'src/components/Pagination2'
 
 type DataSentProp = {
   authorization: string
@@ -20,16 +21,19 @@ type DataSentProp = {
 const Dashboard = () => {
   const [searchValue, setSearchValue] = useState('')
   const [searchString, setSearchString] = useState('')
-  const [allProducts, setAllProducts] = useState<productProps[]>()
+  const [allProducts, setAllProducts] = useState<productProps[]>([])
   const [filteredProducts, setFilteredroducts] = useState<productProps[]>()
   const {ipAddress} = useUserIp.getState();
   const {user} = useUserStore.getState()
   const {setProduct, product} = useUserProducts.getState()
   const clientQuery = useQueryClient()
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, seTotalPages] = useState<number>(1)
+  const [pageData, setPagedata] = useState<productProps[]>([])
 
-  useEffect(()=> {
-    clientQuery.invalidateQueries({queryKey: ['All_Afro_Orders']})
-  }, [clientQuery])
+  // useEffect(()=> {
+  //   clientQuery.invalidateQueries({queryKey: ['All_Afro_Orders']})
+  // }, [clientQuery])
   
   const {isLoading, refetch} = useQuery({
     queryKey: ['All_Afro_Products'],
@@ -93,10 +97,43 @@ const Dashboard = () => {
     
   }, [searchValue, refetch]);
 
+  // useEffect(() => {
+  //   const filteredProducts: productProps[] = (pageData ?? []).filter((prod: productProps) => prod.name.toLowerCase().includes(searchString.toLowerCase()))
+  //     setFilteredroducts(filteredProducts)
+
+  //     const itemsPerPage = 28;
+
+  //   const totalPages = Math.ceil(allProducts.length / itemsPerPage);
+  //   seTotalPages(totalPages)
+  //   const currentProducts = allProducts.slice(
+  //     (currentPage - 1) * itemsPerPage,
+  //     currentPage * itemsPerPage
+  //   );
+  //   setPagedata(currentProducts)
+
+  // }, [searchString, setFilteredroducts, allProducts, currentPage, pageData ])
+
   useEffect(() => {
-    const filteredProducts: productProps[] = (product ?? []).filter((prod: productProps) => prod.name.toLowerCase().includes(searchString.toLowerCase()))
-      setFilteredroducts(filteredProducts)
-  }, [searchString, setFilteredroducts, product ])
+    const filteredProducts: productProps[] = (pageData ?? []).filter((prod: productProps) =>
+      prod.name.toLowerCase().includes(searchString.toLowerCase())
+    );
+  
+    setFilteredroducts(filteredProducts);
+  }, [searchString, pageData]);
+  
+  useEffect(() => {
+    const itemsPerPage = 28;
+    const totalPages = Math.ceil(allProducts.length / itemsPerPage);
+    seTotalPages(totalPages);
+  
+    const currentProducts = allProducts.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  
+    setPagedata(currentProducts);
+  }, [allProducts, currentPage]);
+
 
   if(isLoading || !allProducts){
     return <div className='flex justify-center items-center mt-20'>
@@ -132,6 +169,8 @@ const Dashboard = () => {
             </div>
           ))}
         </div>
+      <Pagination totalPages={totalPages} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+
       </div> :
       <DashboardComponent />
       }      

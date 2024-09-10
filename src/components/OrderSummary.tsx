@@ -3,7 +3,7 @@ import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/re
 import { OrderProps } from 'src/models/models'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { decryptAES, encryptData } from 'src/AES/AES'
-import { getAllLocation, removeFromCart } from 'src/api/api'
+import { getAllLocation, removeFromCart, removeFromCart001 } from 'src/api/api'
 import { useUserStore } from 'src/store/user-store'
 import { toast } from 'sonner'
 import { useCheckoutStore } from 'src/store/user-checkout'
@@ -49,19 +49,33 @@ export default function OrderSummary(props: Props) {
     try {
         const data = {authorization: user?.authorization, cart_reference: user?.cartResponse.cartReference, product_id: id};
         const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY});
-        return removeFromCart({encryptedInfo, setLoading, toast});
+        const response = await removeFromCart001(encryptedInfo);
+        
+      if(response.status === 200){
+        const result: any = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+        const myData = JSON.parse(result)
+        client.invalidateQueries({queryKey: ['All_Afro_Orders']})
+        return myData
+      }
+
+      if(response.status === 500){
+        const result: any = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+        const myData = JSON.parse(result)
+        console.error("delete err: ", myData)
+      }
+
     } catch (error) {
         console.error("Error removing item from cart:", error);
         throw error;
     }
 };
 
-  const {mutate: deleteCartItem} = useMutation({
-    mutationFn: (id:number) => handleDeleteItem(id),
-    // @ts-ignore
-    onSuccess: client.invalidateQueries({queryKey: ['All_Afro_Orders']})
+  // const {mutate: deleteCartItem} = useMutation({
+  //   mutationFn: (id:number) => handleDeleteItem(id),
+  //   // @ts-ignore
+  //   onSuccess: client.invalidateQueries({queryKey: ['All_Afro_Orders']})
   
-  })
+  // })
 
   const onSubmit = async () => {
     setLoading(true)
@@ -144,7 +158,7 @@ export default function OrderSummary(props: Props) {
                             </div>
                             <div>
                             <p className='font-semibold text-primaryColor'>${ord.price}</p>
-                            <p onClick={()=> deleteCartItem(ord.productId)}><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-5 cursor-pointer">
+                            <p onClick={()=> handleDeleteItem(ord.productId)}><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-5 cursor-pointer">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                           </svg>
                           </p>
