@@ -1,6 +1,7 @@
 import appStoreIcon from "../assets/icons/appStoreIcon.png"
 import googlePlayIcon from "../assets/icons/googlePlayIcon.png"
 import phoneImg from "../assets/icons/phoneImg.png"
+import TestimonialCarousel from "./TestimonialComponent"
 import TestimonyComponent from "./TestimonyComponent"
 
 const FinalTestimonialsPage = () => {
@@ -40,15 +41,11 @@ const FinalTestimonialsPage = () => {
             <div>
                 <p className="text-primaryColor font-bold border-l-2 mt-16 border-primaryColor pl-2">Hear from our customers</p>
 
-                <div className="flex gap-4 my-14 w-[100%] border mx-auto overflow-x-scroll">
-                    {
-                        testimonies.map((testimony, index) => (
-                            <div className="w-[500px]">
-                                <TestimonyComponent key={index} {...testimony} />
-                            </div>
-                        ))
-                    }
-                </div>
+                {/* <div className="flex gap-4 my-14 w-[100%] border mx-auto overflow-x-scroll"> */}
+                    
+                                <TestimonialCarousel testimonials={testimonies} />
+
+                {/* </div> */}
             </div>
         </section>
     )

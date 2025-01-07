@@ -22,7 +22,7 @@ const AboutUsPage = () => {
     return (
         <section>
             <FinalNav />
-            <div className="flex flex-col lg:flex-row items-start gap-8 px-4 lg:px-32 py-10">
+            <div className="flex flex-col lg:flex-row items-start gap-8 px-4 lg:px-32 mt-28 py-10">
                 <div className="w-[90%] lg:w-[50%]">
                     <img src={img1} className="w-full object-cover" alt="logo" />
                 </div>

@@ -9,7 +9,7 @@ interface IProps {
 const CommunityComponent = ({image, body, title, bgColor}: IProps) => {
 
     return (
-        <div className={`flex flex-col items-center pb-8 rounded-3xl gap-4 bg-[${bgColor}]`}>
+        <div className={`flex flex-col items-center pb-8 rounded-3xl gap-4`} style={{ backgroundColor: bgColor }}>
             <div className="w-full">
                 <img className="w-full h-full object-contain" src={image} alt="" />
             </div>

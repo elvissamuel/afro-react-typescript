@@ -11,6 +11,11 @@ interface User {
   fullName: string;
 }
 
+interface UserProps {
+  full_name: string;
+  email: string;
+}
+
 interface UserEmailState {
   email: string | null;
   setEmail: (email: string) => void;
@@ -61,10 +66,21 @@ interface UserState {
   updateCartResponse: (cartResponse: cartResponse) => void;
 }
 
+interface UserStateProps {
+  user: UserProps | null;
+  setUser: (user: UserProps) => void;
+  clearUser: () => void;
+}
+
 type UserStorePersist = (
   config: (set: any, get: any, api: any) => UserState,
   options: PersistOptions<UserState>
 ) => (set: any, get: any, api: any) => UserState;
+
+type UserStorePersistProps = (
+  config: (set: any, get: any, api: any) => UserStateProps,
+  options: PersistOptions<UserStateProps>
+) => (set: any, get: any, api: any) => UserStateProps;
 
 type CountStorePersist = (
   config: (set: any, get: any, api: any) => CountState,
@@ -121,6 +137,19 @@ export const useUserStore = create<UserState>(
     }),
     {
       name: 'user-storage', 
+    }
+  )
+);
+
+export const useOnboardUserStore = create<UserStateProps>(
+  (persist as UserStorePersistProps)(
+    (set, get) => ({
+      user: null,
+      setUser: (user:UserProps) => set({ user }),
+      clearUser: () => set({ user: null }),
+    }),
+    {
+      name: 'onboard-user-storage', 
     }
   )
 );

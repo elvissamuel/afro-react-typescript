@@ -5,7 +5,7 @@ import messageIcon from "../assets/icons/messageIcon.png"
 const FinalFooter = () => {
 
     return (
-        <section className="pt-20 pb-8 flex items-center flex-col px-4 lg:px-32 bg-white">
+        <section className="pt-20 pb-8 flex items-center flex-col px-4 w-[80%] mx-auto bg-white">
             <div className="grid lg:grid-cols-5 gap-10 w-full">
                 <div className="flex flex-col gap-4 col-span-2 ">
                     <div className="w-[140px]">
@@ -28,7 +28,7 @@ const FinalFooter = () => {
 
                 <div>
                     <h2 className="text-lg font-semibold my-4">Company</h2>
-                    <ul>
+                    <ul className="flex flex-col gap-2">
                         <li>Marketplace</li>
                         <li>About Us</li>
                         <li>Blog</li>
@@ -39,7 +39,7 @@ const FinalFooter = () => {
 
                 <div>
                     <h2 className="text-lg font-semibold my-4">Community</h2>
-                    <ul>
+                    <ul className="flex flex-col gap-2">
                         <li>Vendor Hub</li>
                         <li>Share our dreams</li>
                         <li>Partnership</li>
@@ -48,7 +48,7 @@ const FinalFooter = () => {
 
                 <div>
                     <h2 className="text-lg font-semibold my-4">Legal</h2>
-                    <ul>
+                    <ul className="flex flex-col gap-2">
                         <li>Term of Service</li>
                         <li>Privacy Policy</li>
                     </ul>

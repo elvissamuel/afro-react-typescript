@@ -75,6 +75,7 @@
 
 
 import CryptoJS from 'crypto-js';
+import { ResponseProps } from 'src/models/models';
 
  interface EncryptProps<T extends object> {
   data: T;

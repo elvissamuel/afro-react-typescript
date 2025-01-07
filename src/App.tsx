@@ -23,6 +23,17 @@ import FinalHeroSection from "./pages/FinalHeroSection";
 import MarketPlacePage from "./pages/MarketPlacePage";
 import AboutUsPage from "./pages/AboutUsPage";
 import FAQsPage from "./pages/FAQsPage";
+import FinalLoginPage from "./pages/FinalLoginPage";
+import FinalOtpPage from "./pages/FinalOtpPage";
+import CreatePassword from "./pages/CreatePassword";
+import CompleteProfile from "./pages/CompleteProfile";
+import MerchantDashboard from "./components/MerchantDashboard";
+import Profile from "./pages/Profile";
+import Wallet from "./pages/Wallet";
+import Settings from "./pages/Settings";
+import OuterApp from "./components/OuterApp";
+import ProductComponent from "./pages/ProductComponent";
+import Product from "./pages/Product";
 
 function App() {
   const {setIpAddress} = useUserIp.getState()
@@ -52,15 +63,25 @@ function App() {
             <Route path="/marketplace" element={<MarketPlacePage />} />
             <Route path="/about-us" element={<AboutUsPage />} />
             <Route path="/faqs" element={<FAQsPage />} />
+            <Route path="/create-password" element={<CreatePassword />} />
             <Route path="/vendor" element={<FinalLandingPage />} />
             <Route path="/rider" element={<FinalLandingPage />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<FinalLoginPage />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/kyc" element={<KnowYourClient />} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/reset-password" element={<CreatePassword />} />
+            <Route path="/app" element={<OuterApp />}>
+            <Route path="/app/dashboard" element={<MerchantDashboard />}>
+              <Route index path="/app/dashboard/profile" element={<Profile />} />
+              <Route index path="/app/dashboard/wallet" element={<Wallet />} />
+              <Route index path="/app/dashboard/setting" element={<Settings />} />
+            </Route>
+            <Route path="/app/product" element={<Product />}>
+            </Route>
+            </Route>
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/legal" element={<Legal />} />
             <Route path="/create-product" element={<CreateProduct />} />

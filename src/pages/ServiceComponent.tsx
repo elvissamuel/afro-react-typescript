@@ -7,7 +7,7 @@ interface IProps {
 const ServiceComponent = ({body, image, title}: IProps) => {
 
     return (
-        <div className="bg-[#F6F6F6] hover:bg-[#E9F7FD] flex flex-col items-center justify-center rounded-2xl gap-6 w-[280px] h-[380px]">
+        <div className="bg-[#F6F6F6] hover:bg-[#E9F7FD] flex flex-col items-center justify-center rounded-2xl gap-6 h-[380px]">
             <div>
                 <img src={image} alt="" />
             </div>

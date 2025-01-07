@@ -54,6 +54,28 @@ export interface LoginFormValues {
   password: string;
 }
 
+export interface OnboardingFormValues {
+  full_name: string;
+  email: string;
+}
+
+export interface SetPasswordFormValues {
+  email: string;
+  password: string;
+
+}
+
+export interface CompleteProfileFormValues {
+  email: string;
+  business_name: string;
+  phone_number: string;
+  address_line_1: string;
+  address_line_2: string;
+  city: string;
+  post_code: string;
+
+}
+
 export interface AdminLoginForm {
   email: string;
   full_name: string;
@@ -228,7 +250,6 @@ export interface headerProps {
 }
 
 export type CustomHeaders = {
-  'auth_param': string | undefined;
   'Content-Type': string;
 };
 
@@ -269,6 +290,8 @@ export interface OrderProps {
   orderRef: string
 }
 
-interface FBase {
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+export interface ResponseProps {
+  response: string;
+  description: string;
+  response_data: string;
 }

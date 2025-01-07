@@ -48,6 +48,7 @@ const CreateProduct = (props: Props) => {
         getImageUrl({files:formData, setImgUrl, setLoading})
       }
     }
+    
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (files && files.length > 0) {
