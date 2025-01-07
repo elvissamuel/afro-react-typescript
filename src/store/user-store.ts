@@ -11,9 +11,24 @@ interface User {
   fullName: string;
 }
 
+interface UserProps {
+  full_name: string;
+  email: string;
+}
+
 interface UserEmailState {
   email: string | null;
   setEmail: (email: string) => void;
+}
+
+interface UserSearchValueState {
+  searchValue: string | null;
+  setSearchValue: (searchValue: string) => void;
+}
+
+interface UserSearchStringState {
+  searchString: string | null;
+  setSearchString: (searchString: string) => void;
 }
 
 interface CountState {
@@ -51,10 +66,21 @@ interface UserState {
   updateCartResponse: (cartResponse: cartResponse) => void;
 }
 
+interface UserStateProps {
+  user: UserProps | null;
+  setUser: (user: UserProps) => void;
+  clearUser: () => void;
+}
+
 type UserStorePersist = (
   config: (set: any, get: any, api: any) => UserState,
   options: PersistOptions<UserState>
 ) => (set: any, get: any, api: any) => UserState;
+
+type UserStorePersistProps = (
+  config: (set: any, get: any, api: any) => UserStateProps,
+  options: PersistOptions<UserStateProps>
+) => (set: any, get: any, api: any) => UserStateProps;
 
 type CountStorePersist = (
   config: (set: any, get: any, api: any) => CountState,
@@ -81,6 +107,16 @@ type UserEmailPersist = (
   options: PersistOptions<UserEmailState>
 ) => (set: any, get: any, api: any) => UserEmailState;
 
+type UserSearchValuePersist = (
+  config: (set: any, get: any, api: any) => UserSearchValueState,
+  options: PersistOptions<UserSearchValueState>
+) => (set: any, get: any, api: any) => UserSearchValueState;
+
+type UserSearchStringPersist = (
+  config: (set: any, get: any, api: any) => UserSearchStringState,
+  options: PersistOptions<UserSearchStringState>
+) => (set: any, get: any, api: any) => UserSearchStringState;
+
 type UserIpPersist = (
   config: (set: any, get: any, api: any) => UserIpState,
   options: PersistOptions<UserIpState>
@@ -105,6 +141,19 @@ export const useUserStore = create<UserState>(
   )
 );
 
+export const useOnboardUserStore = create<UserStateProps>(
+  (persist as UserStorePersistProps)(
+    (set, get) => ({
+      user: null,
+      setUser: (user:UserProps) => set({ user }),
+      clearUser: () => set({ user: null }),
+    }),
+    {
+      name: 'onboard-user-storage', 
+    }
+  )
+);
+
 export const useUserEmail = create<UserEmailState>(
   (persist as UserEmailPersist)(
     (set) => ({
@@ -113,6 +162,30 @@ export const useUserEmail = create<UserEmailState>(
     }),
     {
       name: "Afro-UserEmail",
+    }
+  )
+)
+
+export const useUserSearchValue = create<UserSearchValueState>(
+  (persist as UserSearchValuePersist)(
+    (set) => ({
+      searchValue: null,
+      setSearchValue: (searchValue: string) => set({ searchValue }),
+    }),
+    {
+      name: "Afro-SearchValue",
+    }
+  )
+)
+
+export const useUserSearchString = create<UserSearchStringState>(
+  (persist as UserSearchStringPersist)(
+    (set) => ({
+      searchString: null,
+      setSearchString: (searchString: string) => set({ searchString }),
+    }),
+    {
+      name: "Afro-SearchString",
     }
   )
 )

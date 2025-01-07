@@ -23,7 +23,9 @@ const SingleProduct = () => {
   const {updateCartResponse} = useUserStore.getState();
   const {ipAddress} = useUserIp.getState()
   const { setCartReference, setNumberOfItems, setOrders } = useCartStore.getState();
-  const {count, setCount} = useCountStore.getState();
+  const {setCount} = useCountStore.getState();
+  const count = useCountStore(state => state.count);
+
   const {id} = useParams();
 
     const [loading, setLoading] = useState(false)
@@ -65,6 +67,7 @@ const SingleProduct = () => {
             setOrders(cartResponse.responseBody.orders);
             setCount(1);
             toast.success("Cart was created and item was added successfully");
+            queryClient.invalidateQueries({ queryKey: ['All_Afro_Orders'] });
           }else if(response.status === 500){
             const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
             const data = JSON.parse(decryptedData!)
@@ -85,6 +88,7 @@ const SingleProduct = () => {
             setOrders(cartResponse.responseBody.orders);
             setCount(1)
             toast.success("Item was added to cart successfully");
+            queryClient.invalidateQueries({ queryKey: ['All_Afro_Orders'] });
           }else if(response.status === 500){
             const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
             const data = JSON.parse(decryptedData!)
@@ -95,12 +99,12 @@ const SingleProduct = () => {
     }
   }
 
-    const { mutate: addProduct } = useMutation({
-      mutationFn: handleAddToCart,
-      onSettled: () => {
-          queryClient.invalidateQueries({ queryKey: ['All_Afro_Orders'] });
-      }
-  });
+  //   const { mutate: addProduct } = useMutation({
+  //     mutationFn: handleAddToCart,
+  //     onSettled: () => {
+  //         queryClient.invalidateQueries({ queryKey: ['All_Afro_Orders'] });
+  //     }
+  // });
 
   const onSubmit = async (input: FAddReviewProps)=>{
     setLoading(true)
@@ -156,7 +160,7 @@ const SingleProduct = () => {
                 <div className='flex items-center my-2 justify-between gap-2  md:w-[415px] pr-6'>
                     
                     
-                     <button onClick={()=>{addProduct(); setButtonClick(prev => !prev)}} className='w-[230px] bg-secondaryColor font-semibold text-primaryColor rounded-lg h-[40px]'>Add to Cart</button>
+                     <button onClick={()=>{handleAddToCart(); setButtonClick(prev => !prev)}} className='w-[230px] bg-secondaryColor font-semibold text-primaryColor rounded-lg h-[40px]'>Add to Cart</button>
                      
                     <Counter />
                 </div>

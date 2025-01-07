@@ -2,51 +2,69 @@ import { Dispatch, Fragment, SetStateAction, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { removeFromCart, handleCheckout } from '../api/api'
+import { removeFromCart, handleCheckout01, removeFromCart001 } from '../api/api'
 import { Toaster, toast } from 'sonner'
-import { encryptData } from '../AES/AES'
+import { decryptAES, encryptData } from '../AES/AES'
 import { OrderProps } from '../models/models'
 import { useUserIp, useUserStore } from 'src/store/user-store'
-import OrderSummary from './OrderSummary'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useCheckoutStore } from 'src/store/user-checkout'
+import { useCartStore } from 'src/store/user-cart'
 
 type Props = {
   order: OrderProps[]
   setOpenSummary: Dispatch<SetStateAction<boolean>>;
   setOpenCart: Dispatch<SetStateAction<boolean>>;
+  setStripeUrl: Dispatch<SetStateAction<string | undefined>>;
 }
 
 const ShoppingCart = (props: Props) => {
   const [open, setOpen] = useState(true)
-  const [openSummary, setOpenSummary] = useState(false)
   const [loading, setLoading] = useState(false)
   const client = useQueryClient()
   const {user} = useUserStore.getState()
+  const {cartReference} = useCartStore.getState()
   const {ipAddress} = useUserIp.getState()
+  const navigate =  useNavigate()
+  const location = useLocation();
+  const setCheckoutResponse = useCheckoutStore.getState().setCheckoutResponse;
 
 
   const handleDeleteItem = async (id: number): Promise<any> => {
     try {
-        const data = {authorization: user?.authorization, cart_reference: user?.cartResponse.cartReference, product_id: id};
+        const data = {authorization: user?.authorization, cart_reference: cartReference, product_id: id};
+        console.log("delete sent data: ", data)
         const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY});
-        return removeFromCart({encryptedInfo, setLoading, toast});
+        const response = await removeFromCart001(encryptedInfo);
+        if(response.status === 200){
+          const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+          const parsedData = JSON.parse(decryptedData!);
+          console.log(" delete res: ", parsedData.responseBody)
+          toast.success("Item removed successfully!")
+          client.invalidateQueries({queryKey: ['All_Afro_Orders']})
+          return parsedData.responseBody
+        }
+    
+        if(response.status === 500){
+          const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+          const parsedData = JSON.parse(decryptedData!);
+          console.log(" delete err res: ", parsedData)
+          return parsedData.responseBody
+        }
     } catch (error) {
         console.error("Error removing item from cart:", error);
         throw error;
     }
 };
   
-  const encryptedData = encryptData({data: {authorization: user?.authorization, ip_address: ipAddress, cart_reference: user?.cartResponse.cartReference}, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
+  const encryptedData = encryptData({data: {authorization: user?.authorization, ip_address: ipAddress, cart_reference: cartReference}, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
 
-  const {mutate:handleCartCheckout} = useMutation({
-    mutationFn: ()=> handleCheckout({data:encryptedData, setLoading, toast}),
-  })
-
-  const {mutate: deleteCartItem} = useMutation({
-    mutationFn: (id:number) => handleDeleteItem(id),
-    // @ts-ignore
-    onSuccess: client.invalidateQueries({queryKey: ['All_Afro_Orders']})
+  // const {mutate: deleteCartItem} = useMutation({
+  //   mutationFn: (id:number) => handleDeleteItem(id),
+  //   // @ts-ignore
+  //   onSuccess: client.invalidateQueries({queryKey: ['All_Afro_Orders']})
   
-  })
+  // })
 
   let sum = 0;
   if (props.order !== undefined) {
@@ -54,7 +72,42 @@ const ShoppingCart = (props: Props) => {
       .map((val: OrderProps) => val.price * val.quantity)
       .reduce((acc: number, value: number) => acc + value, 0);
   
-    sum = parseFloat(sum.toFixed(1)); // Round sum to one decimal place
+    sum = parseFloat(sum.toFixed(1)); 
+    }
+
+  const handleSubmit = async ()=>{
+    // setLoading(true)
+    // const response = await handleCheckout01(encryptedData);
+    // if(response.status === 200){
+    //   const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+    //   const parsedData = JSON.parse(decryptedData!);
+    //   console.log(" checkout res: ", parsedData.responseBody)
+    //   setCheckoutResponse(parsedData.responseBody);
+    // }
+
+    // if(response.status === 500){
+    //   const decryptedData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+    //   const parsedData = JSON.parse(decryptedData!);
+    //   console.log(" checkout err res: ", parsedData.responseBody)
+    // }
+
+    // props.setOpenCart(false)
+
+    if(location.pathname.includes("dashboard")){
+      if(sum < 100){
+      toast.error("Purchase total must be at least ₤100")
+      }else{
+      props.setOpenSummary(true);  
+      }
+    }else{
+      toast("You have to signup/login before you checkout")
+      setTimeout(() => {
+      navigate("/login");
+        
+      }, 2000);
+    }
+    setLoading(false)
+
   }
 
   return (
@@ -72,10 +125,8 @@ const ShoppingCart = (props: Props) => {
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
         </Transition.Child>
 
-        {/* <OrderSummary order={props.order} open={openSummary} setOpen={setOpenSummary} openModal={setOpen} /> */}
-
         <div className="fixed inset-0 overflow-hidden">
-        <Toaster richColors position='top-right' />
+        {/* <Toaster richColors position='top-right' /> */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
               <Transition.Child
@@ -134,7 +185,7 @@ const ShoppingCart = (props: Props) => {
 
                                     <div className="flex">
                                       <button
-                                        onClick={()=>deleteCartItem(order.productId)}
+                                        onClick={()=>handleDeleteItem(order.productId)}
                                         type="button"
                                         className="font-medium text-primaryColor hover:text-primaryColorVar"
                                       >
@@ -158,7 +209,7 @@ const ShoppingCart = (props: Props) => {
                       </div>
                       {props.order.length >= 1 && <div className="mt-6">
                         <button
-                        onClick={()=>{props.setOpenSummary(true); props.setOpenCart(false)}}
+                        onClick={()=>handleSubmit()}
                         disabled={loading}
                           className="flex items-center justify-center rounded-md border border-transparent bg-primaryColor px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
                         >

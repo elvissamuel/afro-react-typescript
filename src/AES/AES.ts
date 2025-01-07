@@ -75,6 +75,7 @@
 
 
 import CryptoJS from 'crypto-js';
+import { ResponseProps } from 'src/models/models';
 
  interface EncryptProps<T extends object> {
   data: T;
@@ -89,7 +90,7 @@ export const encryptData1 =<T extends object>(params:EncryptProps<T>) => {
 
 export const encryptData =<T extends object>(params:EncryptProps<T>) => {
     const jsonData = JSON.stringify(params.data);
-    console.log("data: ",jsonData)
+    // console.log("data: ",jsonData)
     const key = CryptoJS.enc.Latin1.parse(params.secretKey ?? "")
     const stringIV = CryptoJS.enc.Latin1.parse("e8f24a9d0c731b5f")
 

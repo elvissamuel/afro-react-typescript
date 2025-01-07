@@ -1,15 +1,16 @@
-import { Dispatch, Fragment, SetStateAction, useState } from 'react'
-import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
+import { Dispatch, SetStateAction, useState } from 'react'
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react'
 import { OrderProps } from 'src/models/models'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { decryptAES, encryptData } from 'src/AES/AES'
-import { getAllLocation, handleCheckout, removeFromCart } from 'src/api/api'
-import { useUserIp, useUserStore } from 'src/store/user-store'
+import { getAllLocation, removeFromCart, removeFromCart001 } from 'src/api/api'
+import { useUserStore } from 'src/store/user-store'
 import { toast } from 'sonner'
+import { useCheckoutStore } from 'src/store/user-checkout'
 
 type Props = {
-  order: OrderProps[];
   setOpenSummary: Dispatch<SetStateAction<boolean>>;
+  stripeUrl: string | undefined;
 }
 
 export default function OrderSummary(props: Props) {
@@ -21,8 +22,8 @@ export default function OrderSummary(props: Props) {
   const [paymentMode, setPaymentMode] = useState<string>()
   const [address, setAddress] = useState<string | null>(null)
   const {user} = useUserStore.getState()
-  const {ipAddress} = useUserIp.getState()
   const client = useQueryClient()
+  const {checkoutResponse} = useCheckoutStore.getState();
 
   useQuery({
     queryKey: ['All_Location'],
@@ -48,25 +49,33 @@ export default function OrderSummary(props: Props) {
     try {
         const data = {authorization: user?.authorization, cart_reference: user?.cartResponse.cartReference, product_id: id};
         const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY});
-        return removeFromCart({encryptedInfo, setLoading, toast});
+        const response = await removeFromCart001(encryptedInfo);
+        
+      if(response.status === 200){
+        const result: any = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+        const myData = JSON.parse(result)
+        client.invalidateQueries({queryKey: ['All_Afro_Orders']})
+        return myData
+      }
+
+      if(response.status === 500){
+        const result: any = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
+        const myData = JSON.parse(result)
+        console.error("delete err: ", myData)
+      }
+
     } catch (error) {
         console.error("Error removing item from cart:", error);
         throw error;
     }
 };
 
-  const {mutate: deleteCartItem} = useMutation({
-    mutationFn: (id:number) => handleDeleteItem(id),
-    // @ts-ignore
-    onSuccess: client.invalidateQueries({queryKey: ['All_Afro_Orders']})
+  // const {mutate: deleteCartItem} = useMutation({
+  //   mutationFn: (id:number) => handleDeleteItem(id),
+  //   // @ts-ignore
+  //   onSuccess: client.invalidateQueries({queryKey: ['All_Afro_Orders']})
   
-  })
-
-  const encryptedData = encryptData({data: {authorization: user?.authorization, ip_address: ipAddress, cart_reference: user?.cartResponse.cartReference}, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
-
-  const {mutate:handleCartCheckout} = useMutation({
-    mutationFn: ()=> handleCheckout({data:encryptedData, setLoading, toast}),
-  })
+  // })
 
   const onSubmit = async () => {
     setLoading(true)
@@ -78,9 +87,9 @@ export default function OrderSummary(props: Props) {
     const data = {delivery_mode: deliveryOption, payment_method: paymentMode, pickup_address: address, cart_reference: user?.cartResponse.cartReference}
       const encryptedData = encryptData({data, secretKey:process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
       const response = await getAllLocation(encryptedData)
-      if(response.status === 200){
-        const myData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY)
-        handleCartCheckout();
+      if(response.status === 200 && checkoutResponse?.stripeResponse !== undefined){
+        window.location.href = checkoutResponse.stripeResponse
+        console.log("logistics: ", response)
       }
 
       if(response.data === 500){
@@ -95,12 +104,12 @@ export default function OrderSummary(props: Props) {
   }
 
   let sum = 0;
-  if (props.order !== undefined) {
-    sum = props.order
+  if (checkoutResponse?.cartResponse.orders !== undefined) {
+    sum = checkoutResponse.cartResponse.orders
       .map((val: OrderProps) => val.price * val.quantity)
       .reduce((acc: number, value: number) => acc + value, 0);
   
-    sum = parseFloat(sum.toFixed(1)); // Round sum to one decimal place
+    sum = parseFloat(sum.toFixed(1));
   }
 
   return (
@@ -136,9 +145,9 @@ export default function OrderSummary(props: Props) {
                   <div className='border m-1 shadow-md rounded-md p-1'>
                     <div className='border m-1 shadow-md rounded-md p-3'>
                       <h2 className='mb-4 pb-2 text-primaryColor font-semibold text-lg'>Order Summary</h2>
-                      {props.order !== undefined && props.order.length !== 0 ?
-                        <div>
-                          {props.order.map((ord: OrderProps, index) => (
+                      {checkoutResponse?.cartResponse.orders !== undefined && checkoutResponse.cartResponse.orders.length !== 0 ?
+                        <div className='h-80 overflow-y-scroll'>
+                          {checkoutResponse.cartResponse.orders.map((ord: OrderProps, index) => (
                             <div key={index} className='border shadow-md m-2 my-4 p-2 flex justify-between'>
                             <div className='flex gap-2'>
                               <div className='w-12 h-12 shadow-md'><img className='object-cover w-full h-full' src={ord.imageUrl} alt={`img- ${ord.imageUrl}-${index}`} /></div>
@@ -149,7 +158,7 @@ export default function OrderSummary(props: Props) {
                             </div>
                             <div>
                             <p className='font-semibold text-primaryColor'>${ord.price}</p>
-                            <p onClick={()=> deleteCartItem(ord.productId)}><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-5 cursor-pointer">
+                            <p onClick={()=> handleDeleteItem(ord.productId)}><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-5 cursor-pointer">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                           </svg>
                           </p>
@@ -172,7 +181,7 @@ export default function OrderSummary(props: Props) {
                               <p className='text-xs'>Pickup goods and the station</p>
                             </div>
                           </div>
-                          {address !== null && deliveryOption === "PICKUP" && <div className=' m-2 p-2 shadow-md rounded-md'>
+                          {checkoutResponse?.deliveryDetails.address !== null && deliveryOption === "PICKUP" && <div className=' m-2 p-2 shadow-md rounded-md'>
                             <h2 className='text-sm font-semibold text-primaryColor'>Available Pickup Station(s)</h2>
                             <div className='flex gap-2 items-center my-3'>
                               <p><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-5 text-primaryColor">
@@ -180,7 +189,7 @@ export default function OrderSummary(props: Props) {
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                               </svg>
                               </p>
-                              <p className='text-sm font-semibold'>{address}</p>
+                              <p className='text-sm font-semibold'>{checkoutResponse?.deliveryDetails.address}</p>
                             </div>
                             </div>}
                         </div>
@@ -275,13 +284,13 @@ export default function OrderSummary(props: Props) {
                       <p>Taxes (10%)</p>
                       <p>₤ 0.00</p>
                       <p>Shipping</p>
-                      <p>₤ 0.00</p>
+                      <p>₤ {checkoutResponse?.transactionResponse.logisticsAmount}</p>
                       <p className='mt-8 font-semibold'>Total</p>
-                      <p className='mt-8'>₤{sum}</p>
+                      <p className='mt-8'>₤{checkoutResponse?.transactionResponse.logisticsAmount !== undefined && sum + checkoutResponse?.transactionResponse.logisticsAmount}</p>
                     </div>
                   </div>
 
-                  <button onClick={()=> onSubmit()} disabled={loading} className=' rounded-lg h-10 text-center bg-primaryColor text-white w-full m-6 mx-auto'>{ loading ? "Loading" : "Checkout"}</button>
+                  <button onClick={()=> onSubmit()} disabled={loading} className=' rounded-lg h-10 text-center bg-primaryColor text-white w-full m-6 mx-auto'>{ loading ? "Loading" : "Proceed to Pay"}</button>
                 </div>
                 </div>
               </DialogPanel>

@@ -15,9 +15,9 @@ const BuisnessForm = () => {
   const setUserEmail = useUserEmail((state) => state.setEmail)
 
   const onSubmit: SubmitHandler<BusinessFormValues> = async (data) => {
+    setLoading(true)
     const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
     setUserEmail(data.email)
-    setLoading(true)
     const response = await registerBusiness(encryptedInfo)
 
     if(response.data){
@@ -32,6 +32,7 @@ const BuisnessForm = () => {
 
       } else if(response.status === 500){
         toast.error(JSON.parse(decryptedData).message)
+        console.log("reg err: ", JSON.parse(decryptedData).message)
       }
     }
     setLoading(false)
@@ -54,7 +55,7 @@ const BuisnessForm = () => {
                 {...register('business_name', {required:true})}
                 type="text"
                 id="business-name"
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block outline-none w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
               />
               {errors.business_name && <span className='text-sm'>This field is required</span>}
             </div>
@@ -71,7 +72,7 @@ const BuisnessForm = () => {
                 {...register('full_name', {required:true})}
                 type="text"
                 id="name"
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block outline-none w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
               />
               {errors.full_name && <span className='text-sm'>This field is required</span>}
             </div>
@@ -88,7 +89,7 @@ const BuisnessForm = () => {
                 {...register('email', {required:true})}
                 type="email"
                 id="email"
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block w-full outline-none bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
                
               />
               {errors.email && <span className='text-sm'>This field is required</span>}
@@ -107,7 +108,7 @@ const BuisnessForm = () => {
                 {...register('address', {required:true})}
                 type="text"
                 id="business_address"
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block w-full outline-none bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
               />
               {errors.address && <span className='text-sm'>This field is required</span>}
             </div>
@@ -120,12 +121,14 @@ const BuisnessForm = () => {
             >
               Phone Number
             </label>
-            <div className="mt-2">
+            <div className="mt-2 relative">
+              <p className='absolute left-1 top-1 font-semibold'>+44</p>
+              <div className='w-[2px] bg-primaryColorVar absolute left-10 h-full'/>
               <input
                 {...register('phone_number', {required:true})}
                 type="text"
                 id='phone-no'
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block w-full bg-secondaryColor outline-none rounded-md pl-12 border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
                
               />
               {errors.phone_number && <span className='text-sm'>This field is required</span>}
@@ -144,7 +147,7 @@ const BuisnessForm = () => {
                 {...register('password', {required:true})}
                 type="password"
                 id='password'
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block w-full outline-none bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
               />
               {errors.password && <span className='text-sm'>This field is required</span>}
             </div>
@@ -159,7 +162,7 @@ const BuisnessForm = () => {
             </label>
             <div className="mt-2">
               <input
-                  className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                  className="block w-full outline-none bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
                   type="password"
                   id="confirmPassword"
                   {...register('confirmPassword', {

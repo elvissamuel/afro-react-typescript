@@ -1,5 +1,6 @@
 import { CustomHeaders, headerProps, OrderProps } from "src/models/models";
 import axios, { AxiosResponse } from 'axios';
+import { decryptAES } from "src/AES/AES";
 
 
 export interface CartResponseBody {
@@ -65,12 +66,9 @@ export const getOrders = () => {
 
 // POST request helper
 export const apiPost = async (url: string, data: any, headers: CustomHeaders): Promise<AxiosResponse<string>> => {
-  try {
     const response = await axios.post<string>(url, data, { headers });
     return response;
-  } catch (error) {
-    throw error;
-  }
+
   
 };
 

@@ -1,10 +1,11 @@
 import React, { ChangeEvent, MouseEvent, useContext, useEffect, useRef, useState } from 'react'
 import logo from '../assets/imgs/afrologo.png'
-import { handleEmailVerification } from '../api/api';
-import { encryptData } from '../AES/AES';
+import bgImg from "../assets/imgs/loginImg.png"
+import { handleEmailVerification, verifyEmail } from '../api/api';
+import { decryptAES, encryptData } from '../AES/AES';
 import { Toaster, toast } from 'sonner'
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useUserEmail } from 'src/store/user-store';
+import { useOnboardUserStore, useUserEmail } from 'src/store/user-store';
 
 
 const Verify = () => {
@@ -15,6 +16,8 @@ const Verify = () => {
   const inputRef4 = useRef<HTMLInputElement>(null);
   const inputRef5 = useRef<HTMLInputElement>(null);
   const inputRef6 = useRef<HTMLInputElement>(null);
+  const {user} = useOnboardUserStore.getState()
+
 
   const [input1, setInput1] = useState('')
   const [input2, setInput2] = useState('')
@@ -46,17 +49,31 @@ const Verify = () => {
       const pathName = location.pathname;
       const token = [input1, input2, input3, input4, input5, input6]
       const verifyCode = token.join('')
-      const data = {email: afroUserEmail, token: verifyCode}
+      const data = {token: verifyCode, email: user?.email}
       const encryptedInfo = encryptData({data, secretKey: process.env.REACT_APP_AFROMARKETS_SECRET_KEY})
-      console.log('token: ', token.join(''), 'email: ', userEmail)
+      console.log('token: ', token.join(''), 'email: ', data.email)
       setLoading(true)
-      handleEmailVerification({encryptedInfo, setLoading, navigate, toast, pathName})
+      const response = await verifyEmail(encryptedInfo)
+      console.log("verify res: ", response)
+      const decryptedData: any = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY);
+      console.log("verify decrypted data: ", decryptedData)
+      if(decryptedData.response === "Registration successful"){
+        toast.success(`${decryptedData.description}`);
+        
+        navigate('/create-password', { replace: true })
+      }
+      const loginResponse = JSON.parse(decryptedData ?? "");
+      if(loginResponse.response === "Registration successful"){
+      toast.success(`${loginResponse.description}`);
+
+    }
       setTimeout(() => {
         setInput1('')
         setInput2('')
         setInput3('')
         setInput4('')
         setInput5('')
+        setInput6('')
       }, 1000);
   }
 
@@ -94,66 +111,60 @@ const Verify = () => {
         } 
     }
     const handleInput5 = (e: ChangeEvent<HTMLInputElement>)=>{
-        setInput5(e.target.value);
+      setInput5(e.target.value);
+      if(e.target.value.length!==0) { 
+          inputRef6.current?.focus()
+      }else{
+          inputRef5.current?.focus()
+      } 
+  }
+    const handleInput6 = (e: ChangeEvent<HTMLInputElement>)=>{
+        setInput6(e.target.value);
     }
   return (
-    <div className=" flex bg-gradient-to-r from-secondaryColor via-white to-white min-h-full h-screen flex-1 flex-col justify-center px-6 py-2 lg:px-8">
-      <Toaster richColors position='top-right' />
-      <div className='absolute top-6 left-4'>
-        <button className="flex items-center gap-1" onClick={()=>navigate('/signup')}>
-          <span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-            <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd" />
-          </svg>
-          </span>
-          <p>Go Back</p>
-        </button>
+    <section className="h-screen overflow-hidden">
+      <div className="grid grid-cols-3 h-full px-4 lg:px-0">
+        <Toaster richColors position='top-right' />
+        <div className=" h-full hidden lg:block"><img src={bgImg} className="object-cover h-full" alt="bg-img" /></div>
+            <div  className="w-full col-span-3 lg:col-span-2 flex flex-col items-center gap-6 pt-12 lg:pt-28">
+              <div className="sm:mx-auto sm:w-full sm:max-w-sm ">
+                <img
+                  className="mx-auto h-14 w-auto"
+                  src={logo}
+                  alt="Company-logo"
+                />
+      
+              </div>
+                    <div className="flex flex-col justify-center items-center mx-auto w-full max-w-sm lg:w-96 ">
+                     <div>
+      
+                       <h2 className="text-xl lg:text-3xl font-semibold text-center">Verify Your Email Address</h2>
+                    <p className="text-sm my-2 text-slate-400 text-center">A verification code has been sent to {user?.email},
+                    enter the code below to verify your account</p>
+                     </div>
+      
+                     <div className="mt-10">
+      
+                       <div className='flex gap-4 text-primaryColor'>
+                 <input ref={inputRef1} maxLength={1} value={input1} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput1(e)} type="text" className=' bg-secondaryColor rounded-xl px-2 w-12 h-16 text-center font-semibold outline-none' />
+                 <input ref={inputRef2} maxLength={1} value={input2} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput2(e)}  type="text" className='rounded-xl px-2 w-12 h-16 text-center font-semibold bg-secondaryColor outline-none' />
+                 <input ref={inputRef3} maxLength={1} value={input3} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput3(e)}  type="text" className=' rounded-xl px-2 w-12 h-16 text-center font-semibold bg-secondaryColor outline-none' />
+                 <input ref={inputRef4} maxLength={1} value={input4} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput4(e)}  type="text" className=' rounded-xl px-2 w-12 h-16 text-center font-semibold bg-secondaryColor outline-none' />
+                 <input ref={inputRef5} maxLength={1} value={input5} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput5(e)} type="text" className=' rounded-xl px-2 w-12 h-16 text-center font-semibold bg-secondaryColor outline-none' />
+                 <input ref={inputRef6} maxLength={1} value={input6} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput6(e)} type="text" className=' rounded-xl px-2 w-12 h-16 text-center font-semibold bg-secondaryColor outline-none' />
+                       </div>
+      
+                 <button onClick={(e)=>handleSubmit(e)} disabled={input5 === ''} className={`mx-auto px-32 rounded-3xl py-3 my-6 block ${input6 === '' ? 'bg-gray-300 text-gray-100' : loading ? 'bg-gray-400 text-gray-700' : 'bg-primaryColor text-white'}`}>
+                    {loading ? 'Loading...' : 'Continue'}
+                 </button>
+      
+                     </div>
+                   </div>
+            </div>
       </div>
-          <div className="sm:mx-auto sm:w-full sm:max-w-sm -mt-32 ">
-            <img
-              className="mx-auto h-14 w-auto"
-              src={logo}
-              alt="Your Company"
-            />
-           
-          </div>
-      <div className="flex flex-col justify-center items-center mx-auto w-full max-w-sm lg:w-96 ">
-       <div>
-         
-         <h2 className="mt-8 text-xl font-bold leading-9 tracking-tight text-gray-900">
-           Continue to your Afromarkets account
-         </h2>
-         <p className="mt-2 text-sm leading-6 text-gray-500">
-           Enter the 5 digit code sent to you at {' '}
-           <span className="font-semibold text-[#0069FF] hover:text-[#006affc8]">
-              {email}
-           </span>
-         </p>
-       </div>
+      <p className="absolute bottom-6 right-8 font-semibold">Step 2/4</p>
 
-       <div className="mt-10">
-         <h2 className='text-slate-800 font-bold mb-2'> Your 5-digit number</h2>
-
-         <div className='flex gap-2 text-primaryColor'>
-             <input ref={inputRef1} maxLength={1} value={input1} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput1(e)} type="text" className=' bg-secondaryColor px-2 w-12 h-10' />
-             <input ref={inputRef2} maxLength={1} value={input2} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput2(e)}  type="text" className=' px-2 w-12 bg-secondaryColor' />
-             <input ref={inputRef3} maxLength={1} value={input3} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput3(e)}  type="text" className=' px-2 w-12 bg-secondaryColor' />
-             <input ref={inputRef4} maxLength={1} value={input4} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput4(e)}  type="text" className=' px-2 w-12 bg-secondaryColor' />
-             <input ref={inputRef5} maxLength={1} value={input5} onInput={(e: ChangeEvent<HTMLInputElement>)=>handleInput5(e)} type="text" className=' px-2 w-12 bg-secondaryColor' />
-             {/* <input ref={inputRef6} maxLength={1} value={input6} onInput={(e)=>handleInput6(e)} type="text" className=' px-2 w-12 bg-secondaryColor' /> */}
-         </div>
-
-         {/* <Link to='/continuetodashboard'> */}
-             <button onClick={(e)=>handleSubmit(e)} disabled={input5 === ''} className={`border px-32 rounded-xl py-2 my-6 block ${input5 === '' ? 'bg-gray-300 text-gray-100' : loading ? 'bg-gray-400 text-gray-700' : 'bg-primaryColor text-white'}`}>
-                {loading ? 'Loading...' : 'Continue'}
-             </button>
-             {/* <Link to='/signup' className='text-sm text-center text-gray-600'>Go back</Link> */}
-         {/* </Link> */}
-         {/* <p className='text-base text-center text-gray-600'>Resend code: 0:12</p> */}
-
-       </div>
-     </div>
-    </div>
+    </section>
   )
 }
 

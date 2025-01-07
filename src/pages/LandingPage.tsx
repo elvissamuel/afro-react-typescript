@@ -1,13 +1,12 @@
 "use client"
 import React, { useContext, useEffect, useState } from 'react'
 import DashboardBanner from '../components/DashboardBanner'
-import { getAllItems, getAllItemsNew} from '../api/api'
+import { getAllItemsNew} from '../api/api'
 import { LoginContext } from '../contexts/LoginContext'
 import { encryptData } from '../AES/AES'
 import { TailSpin} from 'react-loader-spinner';
-import { Toaster, toast } from 'sonner'
+import { Toaster } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
-import HomeNav from '../components/HomeNav'
 import HomeProducts from '../components/HomeProducts'
 
 type Props = {}
@@ -91,7 +90,7 @@ const LandingPage = (props: Props) => {
     </div>
   } return (
     <div className='font-lato'>
-      <HomeNav setSearchValue={setSearchValue} />
+      {/* <HomeNav setSearchValue={setSearchValue} /> */}
       <DashboardBanner />
       <Toaster position="top-center" />
       <div className='grid gap-1 md:grid-cols-2 lg:grid-cols-4 w-[90%] mx-auto '>

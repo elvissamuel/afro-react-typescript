@@ -5,6 +5,65 @@ import { CategoryProps } from "../components/DashboardNav";
 import { apiPost, saveCartData } from "src/lib/helper-function";
 import { useUserOrders, useUserProducts } from "src/store/user-store";
 
+export const onboarding = async (encryptedInfo: string) => {
+  const headers = {
+    'Content-Type': 'text/plain'
+  };
+
+  try {
+    const response = await apiPost(process.env.REACT_APP_AFROMARKETS_URL + "/onboarding/start-onboarding", encryptedInfo, headers);
+    return response
+
+  } catch (error: any) {
+    return error.response;
+    } 
+
+  } 
+
+  export const verifyEmail = async (encryptedInfo: string) => {
+    const headers = {
+      'Content-Type': 'text/plain'
+    };
+  
+    try {
+      const response = await apiPost(process.env.REACT_APP_AFROMARKETS_URL + "/onboarding/verify-token", encryptedInfo, headers);
+      return response
+  
+    } catch (error: any) {
+      return error.response;
+      } 
+  
+    }
+
+    export const setUserPassword = async (encryptedInfo: string) => {
+      const headers = {
+        'Content-Type': 'text/plain'
+      };
+    
+      try {
+        const response = await apiPost(process.env.REACT_APP_AFROMARKETS_URL + "/onboarding/set-user-password", encryptedInfo, headers);
+        return response
+    
+      } catch (error: any) {
+        return error.response;
+        } 
+    
+      }
+
+      export const completeUserProfile = async (encryptedInfo: string) => {
+        const headers = {
+          'Content-Type': 'text/plain'
+        };
+      
+        try {
+          const response = await apiPost(process.env.REACT_APP_AFROMARKETS_URL + "/profile/setup-profile", encryptedInfo, headers);
+          return response
+      
+        } catch (error: any) {
+          return error.response;
+          } 
+      
+        }
 
 export const registerEmail = (params: FRegisterEmailProps) => {
   params.setLoading(true)
@@ -619,6 +678,20 @@ export const addToCart33 = async (encryptedInfo: string) => {
   }
 };
 
+export const addNewProduct = async (encryptedInfo: string) => {
+  const headers = {
+    'auth_param': process.env.REACT_APP_AFROMARKETS_Auth_Params, 
+    'Content-Type': 'text/plain'
+  };
+
+  try{
+    const response = await apiPost(process.env.REACT_APP_AFROMARKETS_URL + "/product-service/product/list-product", encryptedInfo, headers );
+    return response;
+  }catch(error: any){
+    return error.response;
+  }
+};
+
 export const removeFromCart = (params: FRemoveFromCartProps) => {
   const headers = {
     'auth_param':process.env.REACT_APP_AFROMARKETS_Auth_Params, 
@@ -651,6 +724,51 @@ export const removeFromCart = (params: FRemoveFromCartProps) => {
   })
 }
 
+// export const removeFromCart002 = async (encryptedInfo: string) => {
+//   const headers = {
+//     'auth_param':process.env.REACT_APP_AFROMARKETS_Auth_Params, 
+//     'Content-Type': 'text/plain'
+//   }
+//   axios.post(process.env.REACT_APP_AFROMARKETS_URL + "/cart/removeItemFromCart", encryptedInfo, {headers}
+//     )
+//   .then((res) =>{
+//     if(res.data){
+//     const myData = decryptAES(res.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY).then((myres) => {
+//       const response = JSON.parse(myres!)
+//       localStorage.setItem('Afro_Cart_Orders', JSON.stringify(response.responseBody.orders))
+//       localStorage.setItem('Afro_Cart', JSON.stringify(response.responseBody.orders[0]))
+//       localStorage.setItem('Afro_Item_No', JSON.stringify(response.responseBody.numberOfItems))
+//       if(res.status === 200) {
+//         params.toast.success('Product removed successfully', {
+//           duration: 1000
+//         })
+//       }
+//     }).catch((err) => {console.log('real err: ', err)})
+//     console.log('Decrpyted cart res: ', myData)
+//     }
+//   })
+//   .catch((err) => {
+//     console.log('user-form-err: ', err)
+//     params.toast.error("Couldn't remove product from cart")
+//   }).finally(()=>{
+//     params.setLoading(false)
+//   })
+// }
+
+export const removeFromCart001 = async (data: string) => {
+  const headers = {
+    'auth_param':process.env.REACT_APP_AFROMARKETS_Auth_Params, 
+    'Content-Type': 'text/plain'
+  }
+  try{
+    const response = await axios.post(process.env.REACT_APP_AFROMARKETS_URL + "/cart/removeItemFromCart", data, {headers})
+    return response
+  }catch(error: any){
+    return error.response;
+  }
+
+}
+
 
 export const getAllOrders = async (data:string) => {
   const {setOrders} = useUserOrders.getState()
@@ -665,7 +783,7 @@ export const getAllOrders = async (data:string) => {
     if (response.data) {
       const myData = await decryptAES(response.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY);
       const parsedData = JSON.parse(myData!);
-      setOrders(parsedData.responseBody)
+      setOrders(parsedData.responseBody.orders)
       return parsedData.responseBody;
     }
   } catch (error: any) {
@@ -770,7 +888,7 @@ export const deleteProduct = async (id: string) => {
 export const getCategories = (setCategories: React.Dispatch<React.SetStateAction<CategoryProps[]>>) => {
   axios.get(process.env.REACT_APP_AFROMARKETS_URL + "/app/categories")
             .then((res) => {
-              console.log('cat log:', res)
+              // console.log('cat log:', res)
               if(res.data){
                 const myData = decryptAES(res.data, process.env.REACT_APP_AFROMARKETS_SECRET_KEY).then((myres) => {
                   const response = JSON.parse(myres!)
@@ -807,7 +925,7 @@ export const handleCheckout = (params: FCheckoutProps) => {
                 duration: 1000
               });
               setTimeout(() => {
-                window.location.href = checkoutUrl;
+                // window.location.href = checkoutUrl;
               }, 1000);
             }
           })
@@ -827,6 +945,17 @@ export const handleCheckout = (params: FCheckoutProps) => {
     });
 };
 
+export const handleCheckout01 = async (params: string) => {
+  const headers = {
+    'auth_param': process.env.REACT_APP_AFROMARKETS_Auth_Params, 
+    'Content-Type': 'text/plain'
+  };
+
+  const response = await axios.post(process.env.REACT_APP_AFROMARKETS_URL + "/order/checkout", params, { headers })
+  return response;
+  
+};
+
 export const addReview = async (input: FAddReviewProps)=>{
   const headers = {
     'auth_param': process.env.REACT_APP_AFROMARKETS_Auth_Params, 
@@ -840,6 +969,20 @@ export const addReview = async (input: FAddReviewProps)=>{
   }
 
 }
+
+export const updateUserCart = async (encryptedInfo: string) => {
+  const headers = {
+    'auth_param': process.env.REACT_APP_AFROMARKETS_Auth_Params, 
+    'Content-Type': 'text/plain'
+  };
+
+  try{
+    const response = await apiPost(process.env.REACT_APP_AFROMARKETS_URL + "/cart/assignCartToUser", encryptedInfo, headers);
+    return response;
+  }catch(error: any){
+    return error.response;
+  }
+};
 
 
 

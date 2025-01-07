@@ -35,6 +35,8 @@ const UserForm = () => {
         toast.error(JSON.parse(decryptedData).message)
       }
     }
+
+    setLoading(true)
   }
 
   return (
@@ -54,7 +56,7 @@ const UserForm = () => {
                 {...register('full_name', {required:true})}
                 type="text"
                 id="name"
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block w-full outline-none bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
               />
               {errors.full_name && <span className='text-sm'>This field is required</span>}
             </div>
@@ -71,7 +73,7 @@ const UserForm = () => {
               {...register('email', { required: true })}
               type="email"
               id="email"
-              className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+              className="block w-full outline-none bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
             />
 
               {errors.email && <span className='text-sm'>This field is required</span>}
@@ -90,7 +92,7 @@ const UserForm = () => {
                 {...register('home_address', {required:true})}
                 type="text"
                 id="home_address"
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block w-full outline-none bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
               />
               {errors.home_address && <span className='text-sm'>This field is required</span>}
             </div>
@@ -103,12 +105,14 @@ const UserForm = () => {
             >
               Phone Number
             </label>
-            <div className="mt-2">
+            <div className="mt-2 relative">
+            <p className='absolute left-1 top-1 font-semibold'>+44</p>
+            <div className='w-[2px] bg-primaryColorVar absolute left-10 h-full'/>
               <input
                 {...register('phone_number', {required:true})}
                 type="text"
                 id='phone-no'
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block w-full outline-none pl-12 bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
                
               />
               {errors.phone_number && <span className='text-sm'>This field is required</span>}
@@ -127,7 +131,7 @@ const UserForm = () => {
                 {...register('password', {required:true})}
                 type="password"
                 id='password'
-                className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                className="block w-full outline-none bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
               />
               {errors.password && <span className='text-sm'>This field is required</span>}
             </div>
@@ -142,7 +146,7 @@ const UserForm = () => {
             </label>
             <div className="mt-2">
               <input
-                  className="block w-full bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
+                  className="block w-full outline-none bg-secondaryColor rounded-md border-0 py-1.5 px-2 text-primaryColor placeholder:text-primaryColor sm:text-sm sm:leading-6"
                   type="password"
                   id="confirmPassword"
                   {...register('confirmPassword', {

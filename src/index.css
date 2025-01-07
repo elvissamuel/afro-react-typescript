@@ -1,6 +1,6 @@
 /* ./src/index.css */
 
-@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed&family=Bellefair&family=Lato:wght@400;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed&family=Bellefair&family=Lato:wght@400;700;900&family=Manrope:wght@200..800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -10,4 +10,19 @@
   .no-border {
     border: none;
   }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  display: flex;
+  width: calc(200%); /* Double width for seamless scrolling */
+  animation: scroll 60s linear infinite;
 }
